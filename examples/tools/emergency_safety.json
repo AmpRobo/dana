@@ -1,0 +1,99 @@
+[
+ {
+  "name": "call_emergency_services",
+  "description": "Call emergency services.",
+  "parameters": {
+   "service_type": {
+    "type": "string",
+    "description": "'police', 'fire', or 'ambulance'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "share_emergency_location",
+  "description": "Share current location with an emergency contact.",
+  "parameters": {
+   "contact_id": {
+    "type": "string",
+    "description": "The emergency contact to share location with.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "set_emergency_contact",
+  "description": "Set up an emergency contact.",
+  "parameters": {
+   "name": {
+    "type": "string",
+    "description": "Full name of the emergency contact.",
+    "required": true
+   },
+   "phone": {
+    "type": "string",
+    "description": "Phone number of the emergency contact.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_medical_id",
+  "description": "Enable or disable the medical ID display.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "send_safety_check",
+  "description": "Send a safety check-in to a contact.",
+  "parameters": {
+   "contact_id": {
+    "type": "string",
+    "description": "The contact to send the safety check to.",
+    "required": true
+   },
+   "message": {
+    "type": "string",
+    "description": "Optional message to include.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "get_emergency_contacts",
+  "description": "Get the list of emergency contacts.",
+  "parameters": {}
+ },
+ {
+  "name": "report_safety_issue",
+  "description": "Report a safety issue or hazard.",
+  "parameters": {
+   "description": {
+    "type": "string",
+    "description": "Description of the safety issue.",
+    "required": true
+   },
+   "location": {
+    "type": "string",
+    "description": "Optional location of the issue.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "enable_crash_detection",
+  "description": "Enable or disable automatic crash detection.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ }
+]

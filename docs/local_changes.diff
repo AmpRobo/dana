@@ -1,0 +1,734 @@
+diff -ruN '--exclude=.venv' '--exclude=checkpoints' '--exclude=tokenizer' '--exclude=GUIDE_zh.md' '--exclude=local_changes.diff' '--exclude=*.egg-info' '--exclude=__pycache__' a/dana/cli.py dana/dana/cli.py
+--- a/dana/cli.py	2026-08-09 21:23:00.000000000 +0900
++++ b/dana/cli.py	2026-11-13 01:35:36.642774203 +0900
+@@ -6,6 +6,23 @@
+ 
+ HELP = """Check the readme"""
+ 
++_GOOGLE_PCI_VENDOR = "0x1ae0"
++
++
++def _is_tpu_host():
++    """Whether to call jax.distributed.initialize(): DANA_DISTRIBUTED=1/0 decides, else a
++    Google /dev/accel0. Other vendors' accel devices (an Intel NPU, say) are not TPUs."""
++    forced = os.environ.get("DANA_DISTRIBUTED")
++    if forced is not None:
++        return forced == "1"
++    if not os.path.exists("/dev/accel0"):
++        return False
++    try:
++        with open("/sys/class/accel/accel0/device/vendor") as f:
++            return f.read().strip() == _GOOGLE_PCI_VENDOR
++    except OSError:
++        return True
++
+ 
+ _ABSL_LOG_START = re.compile(rb"^[EIWF]\d{4} \d\d:\d\d:\d\d")
+ _NOISY_LOG_HEADER = re.compile(
+@@ -177,6 +194,8 @@
+     p.add_argument("--save-every", type=int, default=1000,
+                    help="Save and upload checkpoint every N steps (default: 1000)")
+     p.add_argument("--checkpoint-dir", type=str, default="checkpoints")
++    p.add_argument("--data", type=str, default="PleIAs/SYNTH",
++                   help="Hugging Face dataset id, or local .parquet files (path, directory or glob)")
+ 
+     p = sub.add_parser("tokenize", add_help=False)
+     p.add_argument("--max-samples", type=int, default=None,
+@@ -189,6 +208,9 @@
+                    help="Shuffle tool order in encoder input (default: True)")
+     p.add_argument("--max-tool-len", type=int, default=256,
+                    help="Max token length for individual tool descriptions (default: 256)")
++    p.add_argument("--train-tokenizer", action="store_true",
++                   help="Retrain the SentencePiece tokenizer on the data first (breaks compatibility "
++                        "with the released weights; only for pretraining from scratch)")
+ 
+     p = sub.add_parser("run", add_help=False)
+     p.add_argument("--checkpoint", type=str, required=True)
+@@ -307,13 +329,13 @@
+         tokenize(args)
+     elif args.command == "pretrain":
+         import jax
+-        if os.path.exists("/dev/accel0"):
++        if _is_tpu_host():
+             jax.distributed.initialize()
+         from .training.pretrain import pretrain
+         pretrain(args)
+     elif args.command == "train":
+         import jax
+-        if os.path.exists("/dev/accel0"):
++        if _is_tpu_host():
+             jax.distributed.initialize()
+         from .training.train import train
+         train(args)
+diff -ruN '--exclude=.venv' '--exclude=checkpoints' '--exclude=tokenizer' '--exclude=GUIDE_zh.md' '--exclude=local_changes.diff' '--exclude=*.egg-info' '--exclude=__pycache__' a/dana/dataset/dataset.py dana/dana/dataset/dataset.py
+--- a/dana/dataset/dataset.py	2026-08-09 21:23:00.000000000 +0900
++++ b/dana/dataset/dataset.py	2026-11-13 01:36:43.258272563 +0900
+@@ -25,7 +25,10 @@
+ 
+ import re as _re
+ 
+-HF_DATASET_REPO = "Cactus-Compute/tool-calls"
++# Hugging Face homes for the tool-call dataset and its tokenized cache. Cactus kept both
++# private; unset means local only (data/tool_calls_unified/{train,validation}, .data_cache/).
++HF_DATASET_REPO = os.environ.get("DANA_HF_DATASET_REPO") or None
++_HF_TOKENIZED_REPO = os.environ.get("DANA_HF_TOKENIZED_REPO") or None
+ 
+ 
+ def download_hf_split(split="train", repo_id=HF_DATASET_REPO):
+@@ -37,6 +40,8 @@
+     from huggingface_hub import HfApi, hf_hub_download
+     import pyarrow.parquet as pq
+ 
++    if not repo_id:
++        raise FileNotFoundError("no dataset repo: set DANA_HF_DATASET_REPO=<you>/<repo>")
+     api = HfApi()
+     files = api.list_repo_files(repo_id, repo_type="dataset", token=True)
+     prefix = f"data/{split}-"
+@@ -235,6 +240,8 @@
+             print(f"Warning: failed to load from {local_dir}: {e}")
+ 
+     try:
++        if not HF_DATASET_REPO:
++            raise FileNotFoundError("DANA_HF_DATASET_REPO is unset")
+         print(f"Downloading {hf_split} split from HuggingFace ({HF_DATASET_REPO})...")
+         ds = download_hf_split(hf_split)
+         os.makedirs(local_dir, exist_ok=True)
+@@ -247,7 +254,7 @@
+ 
+     raise FileNotFoundError(
+         f"Dataset split '{hf_split}' not found at {local_dir}. "
+-        f"Run 'dana tokenize' first."
++        f"Run 'dana generate-data' (or set DANA_HF_DATASET_REPO) first."
+     )
+ 
+ 
+@@ -281,13 +288,13 @@
+     return results
+ 
+ 
+-_HF_TOKENIZED_REPO = "Cactus-Compute/tokenized-tool-calls"
+-
+-
+ def _download_tokenized_from_hf():
+-    """Download tokenized .npy files from HuggingFace Hub into CACHE_DIR."""
++    """Download tokenized .npy files from $DANA_HF_TOKENIZED_REPO into CACHE_DIR."""
+     from huggingface_hub import snapshot_download
+ 
++    if not _HF_TOKENIZED_REPO:
++        raise FileNotFoundError("DANA_HF_TOKENIZED_REPO is unset")
++
+     local = snapshot_download(
+         _HF_TOKENIZED_REPO,
+         repo_type="dataset",
+diff -ruN '--exclude=.venv' '--exclude=checkpoints' '--exclude=tokenizer' '--exclude=GUIDE_zh.md' '--exclude=local_changes.diff' '--exclude=*.egg-info' '--exclude=__pycache__' a/dana/dataset/generate.py dana/dana/dataset/generate.py
+--- a/dana/dataset/generate.py	2026-08-09 21:23:00.000000000 +0900
++++ b/dana/dataset/generate.py	2026-11-13 01:37:02.065832835 +0900
+@@ -1727,108 +1727,136 @@
+ 
+ 
+ LOCAL_UNIFIED_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "tool_calls_unified")
+-HF_DATASET_REPO = "Cactus-Compute/tool-calls"
++HF_DATASET_REPO = os.environ.get("DANA_HF_DATASET_REPO") or None
+ UPLOAD_EVERY = 100000
++VAL_EVERY = 50  # about 1 in 50 new queries goes to the validation split, chosen by query hash
+ 
+ 
+-def _load_existing():
+-    """Load existing dataset from disk or HuggingFace."""
+-    from datasets import load_dataset, load_from_disk
++def _split_dir(split):
++    return os.path.join(os.path.abspath(LOCAL_UNIFIED_DIR), split)
++
+ 
+-    local = os.path.abspath(LOCAL_UNIFIED_DIR)
++def _load_split(split):
++    from datasets import load_from_disk
++    local = _split_dir(split)
+     if os.path.exists(local) and any(f.endswith(".arrow") for f in os.listdir(local)):
+-        ds = load_from_disk(local)
+-        print(f"Loaded existing dataset: {len(ds)} rows")
+-    else:
+-        print(f"Downloading existing dataset from {HF_DATASET_REPO}...")
++        return load_from_disk(local)
++    if HF_DATASET_REPO:
+         from .dataset import download_hf_split
+-        ds = download_hf_split("train", HF_DATASET_REPO)
+-        # Save locally so subsequent chunks don't re-download
+-        os.makedirs(local, exist_ok=True)
+-        ds.save_to_disk(local)
+-        # Clear HF download cache to avoid double storage
+-        hf_cache = os.path.expanduser("~/.cache/huggingface/datasets")
+-        if os.path.exists(hf_cache):
+-            import shutil
+-            shutil.rmtree(hf_cache)
+-            print(f"Cleared HF dataset cache ({hf_cache})")
+-        print(f"Downloaded: {len(ds)} rows")
+-    return ds
++        print(f"Downloading existing {split} split from {HF_DATASET_REPO}...")
++        try:
++            return download_hf_split(split, HF_DATASET_REPO)
++        except FileNotFoundError:
++            return None
++    return None
+ 
+ 
+-def _merge_and_upload(existing, new_examples):
+-    """Merge new examples into existing dataset, save locally, and upload."""
+-    import shutil
+-    from collections import Counter
+-    from datasets import Dataset, concatenate_datasets
++def _load_existing():
++    """Existing train and validation splits from data/tool_calls_unified/, else from
++    $DANA_HF_DATASET_REPO, else an empty start."""
++    existing = {split: _load_split(split) for split in ("train", "validation")}
++    rows = sum(len(ds) for ds in existing.values() if ds is not None)
++    print(f"Loaded existing dataset: {rows} rows" if rows else "No existing dataset; starting fresh")
++    return existing
+ 
+-    new_ds = Dataset.from_dict({
+-        "query": [ex["query"] for ex in new_examples],
+-        "tools": [ex["tools"] for ex in new_examples],
+-        "answers": [ex["answers"] for ex in new_examples],
+-        "source": [ex["source"] for ex in new_examples],
+-        "model": [ex["model"] for ex in new_examples],
+-        "language": [ex.get("language", "English") for ex in new_examples],
+-    })
+-    # Keep only columns that exist in the existing dataset (language may be new)
+-    overlap_cols = [c for c in new_ds.column_names if c in existing.column_names]
+-    extra_cols = [c for c in new_ds.column_names if c not in existing.column_names]
+-    if extra_cols:
+-        # Add missing columns to existing dataset with defaults
+-        for col in extra_cols:
+-            existing = existing.add_column(col, ["English"] * len(existing) if col == "language" else [""] * len(existing))
+-    new_ds = new_ds.select_columns(existing.column_names)
+ 
+-    merged = concatenate_datasets([existing, new_ds])
+-    print(f"\nMerged: {len(merged)} rows (+{len(new_ds)} new)")
++def _is_val(query):
++    import hashlib
++    return int(hashlib.md5(query.encode("utf-8")).hexdigest(), 16) % VAL_EVERY == 0
+ 
+-    for src, cnt in Counter(merged["source"]).most_common():
+-        print(f"  {src}: {cnt}")
+ 
+-    local = os.path.abspath(LOCAL_UNIFIED_DIR)
++def _save_split(ds, split):
++    import shutil
++    local = _split_dir(split)
+     tmp_dir = local + "_tmp"
+     if os.path.exists(tmp_dir):
+         shutil.rmtree(tmp_dir)
+-    merged.save_to_disk(tmp_dir)
++    ds.save_to_disk(tmp_dir)
+     if os.path.exists(local):
+         shutil.rmtree(local)
+     os.rename(tmp_dir, local)
+-    print("Saved locally.")
+ 
+-    import tempfile
+-    from huggingface_hub import HfApi, CommitOperationDelete
+ 
+-    api = HfApi()
+-    api.create_repo(HF_DATASET_REPO, repo_type="dataset", private=False, exist_ok=True)
++def _upload_split(api, ds, split):
++    import tempfile
++    import shutil
++    from huggingface_hub import CommitOperationDelete
+ 
+-    # Export to parquet and upload via HfApi to avoid push_to_hub dataset card bug
+     parquet_dir = tempfile.mkdtemp(prefix="dana_upload_")
+-    print(f"Exporting to parquet...")
+-    merged.to_parquet(os.path.join(parquet_dir, "train.parquet"))
+-
+-    # Delete old train shards first
++    path = os.path.join(parquet_dir, f"{split}.parquet")
++    ds.to_parquet(path)
+     files = api.list_repo_files(HF_DATASET_REPO, repo_type="dataset", token=True)
+-    old_train = [f for f in files if f.startswith("data/train-")]
+-    if old_train:
+-        print(f"Deleting {len(old_train)} old train shards...")
+-        ops = [CommitOperationDelete(path_in_repo=f) for f in old_train]
++    old = [f for f in files if f.startswith(f"data/{split}-")]
++    if old:
+         api.create_commit(
+-            repo_id=HF_DATASET_REPO, repo_type="dataset", operations=ops,
+-            commit_message="Remove old train shards before re-upload", token=True,
++            repo_id=HF_DATASET_REPO, repo_type="dataset",
++            operations=[CommitOperationDelete(path_in_repo=f) for f in old],
++            commit_message=f"Remove old {split} shards before re-upload", token=True,
+         )
+-
+-    print(f"Uploading to {HF_DATASET_REPO} (train split)...")
+     api.upload_file(
+-        path_or_fileobj=os.path.join(parquet_dir, "train.parquet"),
+-        path_in_repo="data/train-00000-of-00001.parquet",
++        path_or_fileobj=path, path_in_repo=f"data/{split}-00000-of-00001.parquet",
+         repo_id=HF_DATASET_REPO, repo_type="dataset", token=True,
+-        commit_message=f"Upload train data ({len(merged)} rows)",
++        commit_message=f"Upload {split} data ({len(ds)} rows)",
+     )
++    shutil.rmtree(parquet_dir)
+ 
+-    import shutil as _shutil
+-    _shutil.rmtree(parquet_dir)
+-    print(f"Upload complete: {HF_DATASET_REPO}")
+ 
++def _merge_and_upload(existing, new_examples):
++    """Merge new examples into the train/validation splits, save them locally, and upload
++    them to $DANA_HF_DATASET_REPO when it is set."""
++    from collections import Counter
++    from datasets import Dataset, concatenate_datasets
++
++    def as_dataset(examples):
++        return Dataset.from_dict({
++            "query": [ex["query"] for ex in examples],
++            "tools": [ex["tools"] for ex in examples],
++            "answers": [ex["answers"] for ex in examples],
++            "source": [ex["source"] for ex in examples],
++            "model": [ex["model"] for ex in examples],
++            "language": [ex.get("language", "English") for ex in examples],
++        })
++
++    val_new = [ex for ex in new_examples if _is_val(ex["query"])]
++    train_new = [ex for ex in new_examples if not _is_val(ex["query"])]
++    if existing.get("validation") is None and not val_new and len(train_new) > 1:
++        val_new = [train_new.pop()]
++
++    merged = {}
++    for split, examples in (("train", train_new), ("validation", val_new)):
++        old = existing.get(split)
++        if not examples:
++            merged[split] = old
++            continue
++        new_ds = as_dataset(examples)
++        if old is None:
++            merged[split] = new_ds
++            continue
++        for col in [c for c in new_ds.column_names if c not in old.column_names]:
++            old = old.add_column(col, ["English"] * len(old) if col == "language" else [""] * len(old))
++        merged[split] = concatenate_datasets([old, new_ds.select_columns(old.column_names)])
++
++    for split, ds in merged.items():
++        if ds is None:
++            continue
++        print(f"\n{split}: {len(ds)} rows")
++        for src, cnt in Counter(ds["source"]).most_common():
++            print(f"  {src}: {cnt}")
++        _save_split(ds, split)
++    print(f"Saved locally to {os.path.abspath(LOCAL_UNIFIED_DIR)}")
++
++    if not HF_DATASET_REPO:
++        print("Not uploading (set DANA_HF_DATASET_REPO=<you>/<repo> to upload).")
++        return merged
++
++    from huggingface_hub import HfApi
++    api = HfApi()
++    api.create_repo(HF_DATASET_REPO, repo_type="dataset", private=True, exist_ok=True)
++    for split, ds in merged.items():
++        if ds is not None:
++            print(f"Uploading {split} to {HF_DATASET_REPO}...")
++            _upload_split(api, ds, split)
++    print(f"Upload complete: {HF_DATASET_REPO}")
+     return merged
+ 
+ 
+@@ -1844,7 +1872,8 @@
+ 
+     seen_queries = set()
+     if existing and not args.dry_run:
+-        seen_queries = set(_dedup_key(q) for q in existing["query"])
++        seen_queries = set(_dedup_key(q) for ds in existing.values() if ds is not None
++                           for q in ds["query"])
+ 
+     while remaining > 0:
+         chunk_size = min(remaining, args.upload_every)
+diff -ruN '--exclude=.venv' '--exclude=checkpoints' '--exclude=tokenizer' '--exclude=GUIDE_zh.md' '--exclude=local_changes.diff' '--exclude=*.egg-info' '--exclude=__pycache__' a/dana/dataset/tokenize.py dana/dana/dataset/tokenize.py
+--- a/dana/dataset/tokenize.py	2026-08-09 21:23:00.000000000 +0900
++++ b/dana/dataset/tokenize.py	2026-11-13 01:37:32.709862191 +0900
+@@ -1,8 +1,9 @@
+ """Standalone tokenization pipeline: train tokenizer and pre-tokenize all data.
+ 
+-Downloads the tool-calling dataset from HuggingFace (Cactus-Compute/tool-calls),
+-trains the SentencePiece tokenizer, and tokenizes train + val splits,
+-caching everything locally.
++Reads the tool-calling dataset from data/tool_calls_unified/ (written by
++`dana generate-data`, or fetched from $DANA_HF_DATASET_REPO), optionally
++retrains the SentencePiece tokenizer, and tokenizes train + val splits into
++.data_cache/.
+ 
+ Usage:
+     dana tokenize                         # full run
+@@ -17,7 +18,6 @@
+     DEFAULT_MAX_DEC_LEN,
+     DEFAULT_MAX_ENC_LEN,
+     LOCAL_UNIFIED_DIR,
+-    TOKENIZER_DIR,
+     _cache_key,
+     _save_cache_metadata,
+     get_tokenizer,
+@@ -28,26 +28,17 @@
+ )
+ 
+ 
+-_HF_MODEL_REPO = "Cactus-Compute/needle"
+-_HF_TOKENIZED_REPO = "Cactus-Compute/tokenized-tool-calls"
++_HF_TOKENIZED_REPO = os.environ.get("DANA_HF_TOKENIZED_REPO") or None
+ 
+ 
+-def _push_to_hf(cache_dir, tokenizer_dir):
+-    """Upload tokenizer and tokenized data to HuggingFace."""
++def _push_to_hf(cache_dir):
++    """Upload the tokenized data to $DANA_HF_TOKENIZED_REPO (skipped when unset)."""
++    if not _HF_TOKENIZED_REPO:
++        print("Not uploading (set DANA_HF_TOKENIZED_REPO=<you>/<repo> to upload).")
++        return
+     from huggingface_hub import HfApi
+ 
+     api = HfApi()
+-
+-    print(f"Uploading tokenizer to {_HF_MODEL_REPO} ...")
+-    for fname in os.listdir(tokenizer_dir):
+-        if fname.endswith((".model", ".vocab")):
+-            api.upload_file(
+-                path_or_fileobj=os.path.join(tokenizer_dir, fname),
+-                path_in_repo=f"tokenizer/{fname}",
+-                repo_id=_HF_MODEL_REPO,
+-                repo_type="model",
+-            )
+-
+     api.create_repo(_HF_TOKENIZED_REPO, repo_type="dataset", private=True, exist_ok=True)
+     print(f"Uploading tokenized data to {_HF_TOKENIZED_REPO} ...")
+     api.upload_folder(
+@@ -57,47 +48,41 @@
+         allow_patterns=["*.npy", "*.json"],
+         delete_patterns=["*.npy", "*.json"],
+     )
+-
+     print("HuggingFace upload complete.")
+ 
+ 
+-def _clear_local_caches():
+-    """Remove local .data_cache/, tokenizer/, and unified dataset directories."""
+-    for d in [CACHE_DIR, TOKENIZER_DIR, LOCAL_UNIFIED_DIR]:
+-        if os.path.exists(d):
+-            print(f"Removing {d}/ ...")
+-            shutil.rmtree(d)
+-
+-
+-def _download_synth_dataset():
+-    """Download synthesized tool-calling dataset (train + validation) from HuggingFace."""
+-    from .dataset import download_hf_split
++def _ensure_dataset():
++    """Make sure data/tool_calls_unified/{train,validation} exist, fetching them from
++    $DANA_HF_DATASET_REPO if they are not on disk."""
++    from .dataset import HF_DATASET_REPO, download_hf_split
+ 
+-    print("Downloading dataset from HuggingFace (Cactus-Compute/tool-calls)...")
+     for split in ("train", "validation"):
+-        try:
+-            ds = download_hf_split(split)
+-        except Exception as e:
++        split_dir = os.path.join(LOCAL_UNIFIED_DIR, split)
++        if os.path.isdir(split_dir) and any(f.endswith(".arrow") for f in os.listdir(split_dir)):
++            continue
++        if not HF_DATASET_REPO:
+             raise FileNotFoundError(
+-                f"Dataset split '{split}' not found on HuggingFace (Cactus-Compute/tool-calls): {e}\n"
+-                "Run 'python scripts/generate_data.py' first."
++                f"No '{split}' split at {split_dir}. Run 'dana generate-data' first, "
++                "or set DANA_HF_DATASET_REPO to a dataset repo with data/{train,validation}-*.parquet."
+             )
+-        split_dir = os.path.join(LOCAL_UNIFIED_DIR, split)
++        print(f"Downloading {split} from {HF_DATASET_REPO}...")
++        ds = download_hf_split(split, HF_DATASET_REPO)
+         os.makedirs(split_dir, exist_ok=True)
+         ds.save_to_disk(split_dir)
+         print(f"Saved {split}: {len(ds):,} rows to {split_dir}")
+ 
+ 
+ def tokenize(args):
+-    print("=== Clearing existing caches ===")
+-    _clear_local_caches()
+-
+-    print("\n=== Downloading dataset from HuggingFace ===")
+-    _download_synth_dataset()
+-
+-    print("\n=== Training tokenizer ===")
+-    train_tokenizer(max_samples=args.max_samples, force=True)
++    print("=== Checking the tool-call dataset ===")
++    _ensure_dataset()
+ 
++    if os.path.exists(CACHE_DIR):
++        print(f"Removing old tokenized cache {CACHE_DIR}/ ...")
++        shutil.rmtree(CACHE_DIR)
++
++    if getattr(args, "train_tokenizer", False):
++        print("\n=== Training tokenizer (the released weights will no longer match) ===")
++        train_tokenizer(max_samples=args.max_samples, force=True)
+     tokenizer = get_tokenizer()
+ 
+     print("\n=== Tokenizing text data ===")
+@@ -126,10 +111,5 @@
+         _save_cache_metadata(split, text_cache_id, len(kept_indices),
+                              max_enc_len, max_dec_len, max_tool_len)
+ 
+-    _push_to_hf(CACHE_DIR, TOKENIZER_DIR)
+-
+-    if os.path.exists(LOCAL_UNIFIED_DIR):
+-        print(f"\n=== Removing raw dataset ({LOCAL_UNIFIED_DIR}) ===")
+-        shutil.rmtree(LOCAL_UNIFIED_DIR)
+-
++    _push_to_hf(CACHE_DIR)
+     print("\n=== Tokenization pipeline complete ===")
+diff -ruN '--exclude=.venv' '--exclude=checkpoints' '--exclude=tokenizer' '--exclude=GUIDE_zh.md' '--exclude=local_changes.diff' '--exclude=*.egg-info' '--exclude=__pycache__' a/dana/training/pretrain.py dana/dana/training/pretrain.py
+--- a/dana/training/pretrain.py	2026-08-09 21:23:00.000000000 +0900
++++ b/dana/training/pretrain.py	2026-11-13 01:36:10.043263046 +0900
+@@ -30,13 +30,52 @@
+     make_causal_mask,
+ )
+ from .optim import create_train_state, _wsd_schedule
+-from ..utils.distributed import _replicate, _unreplicate, shard_batch, _upload_checkpoint
++from ..utils.distributed import (
++    _replicate, _unreplicate, shard_batch, _upload_checkpoint, _download_checkpoint,
++)
+ 
+ _HF_PRETRAIN_REPO = "PleIAs/SYNTH"
++_SYNTH_ROWS = 80_000_000
++_PRETRAIN_FIELDS = ["query", "query_seed_text", "synthetic_answer"]
++
++
++def _local_parquet(data):
++    """Local parquet files named by a path, directory or glob, else [] for a Hugging Face id."""
++    import glob
++    path = os.path.expanduser(data)
++    if os.path.isdir(path):
++        return sorted(glob.glob(os.path.join(path, "**", "*.parquet"), recursive=True))
++    files = sorted(glob.glob(path))
++    if not files and (glob.has_magic(path) or path.startswith((".", os.sep))):
++        raise FileNotFoundError(f"no parquet files match {data}")
++    return files
++
++
++def _count_rows(data):
++    """Rows in local parquet (read from the file footers), else the SYNTH estimate."""
++    files = _local_parquet(data)
++    if not files:
++        return _SYNTH_ROWS
++    import pyarrow.parquet as pq
++    return sum(pq.ParquetFile(f).metadata.num_rows for f in files)
++
++
++def _open_stream(data):
++    """Stream the pretraining rows, reading only the three columns the batches use."""
++    from datasets import load_dataset
++    files = _local_parquet(data)
++    if files:
++        return load_dataset("parquet", data_files=files, split="train", streaming=True,
++                            columns=_PRETRAIN_FIELDS)
++    try:
++        return load_dataset(data, split="train", streaming=True, columns=_PRETRAIN_FIELDS)
++    except (TypeError, ValueError):
++        return load_dataset(data, split="train", streaming=True)
+ 
+ 
+-def _stream_batches(tokenizer, batch_size, max_enc_len, max_dec_len, seed=42):
+-    """Stream batches from PleIAs/SYNTH, tokenizing on-the-fly.
++def _stream_batches(tokenizer, batch_size, max_enc_len, max_dec_len, seed=42,
++                    data=_HF_PRETRAIN_REPO):
++    """Stream batches from PleIAs/SYNTH (or local parquet), tokenizing on-the-fly.
+ 
+     Encoder: [query_tokens, <tools>, seed_text_tokens] truncated to max_enc_len
+     Decoder input:  [EOS, answer_tokens] truncated to max_dec_len
+@@ -44,9 +83,7 @@
+ 
+     Yields (enc, dec_in, dec_tgt) as numpy int32 arrays of shape (batch_size, seq_len).
+     """
+-    from datasets import load_dataset
+-
+-    ds = load_dataset(_HF_PRETRAIN_REPO, split="train", streaming=True)
++    ds = _open_stream(data)
+     # Small shuffle buffer so first batch yields quickly on resume.
+     # Dataset is already split across 500 shards so it's already partially shuffled.
+     ds = ds.shuffle(seed=seed, buffer_size=1000)
+@@ -197,23 +234,11 @@
+     resume_checkpoint_arg = getattr(args, "checkpoint", None)
+     _preloaded_ckpt = None
+     if resume_checkpoint_arg:
+-        if not os.path.exists(resume_checkpoint_arg):
+-            print(f"  Checkpoint not found locally, downloading from HF...", flush=True)
+-            try:
+-                from huggingface_hub import hf_hub_download
+-                local_dir = os.path.dirname(resume_checkpoint_arg) or "checkpoints"
+-                os.makedirs(local_dir, exist_ok=True)
+-                local_path = hf_hub_download(
+-                    repo_id="Cactus-Compute/checkpoints",
+-                    filename=os.path.basename(resume_checkpoint_arg),
+-                    repo_type="model",
+-                    local_dir=local_dir,
+-                )
+-                resume_checkpoint_arg = local_path
+-                print(f"  Downloaded to {local_path}", flush=True)
+-            except Exception as e:
+-                print(f"  ERROR downloading checkpoint: {e}", flush=True)
+-                return
++        try:
++            resume_checkpoint_arg = _download_checkpoint(resume_checkpoint_arg)
++        except Exception as e:
++            print(f"  ERROR loading checkpoint: {e}", flush=True)
++            return
+ 
+         print(f"  Pre-loading config from {resume_checkpoint_arg}", flush=True)
+         with open(resume_checkpoint_arg, "rb") as f:
+@@ -240,8 +265,9 @@
+     effective_batch_size = args.batch_size * num_devices
+     global_batch_size = effective_batch_size * num_hosts
+ 
+-    # Estimate total steps: 80M rows / global_batch_size
+-    estimated_rows = 80_000_000
++    # Estimate total steps: rows / global_batch_size (80M for SYNTH, counted for local parquet)
++    data = getattr(args, "data", _HF_PRETRAIN_REPO)
++    estimated_rows = _count_rows(data)
+     max_steps = getattr(args, "max_steps", None)
+     estimated_steps = estimated_rows // global_batch_size
+     if max_steps:
+@@ -297,7 +323,7 @@
+         decay_steps = max(1, int(total_steps * decay_ratio))
+         stable_steps = total_steps - warmup_steps - decay_steps
+         print(f"\n  ─────────────────────────────────────")
+-        print(f"  Pretraining on PleIAs/SYNTH")
++        print(f"  Pretraining on {data} ({estimated_rows:,} rows)")
+         print(f"  ─────────────────────────────────────")
+         print(f"  Parameters    {param_count:>12,}")
+         print(f"  d_model       {config.d_model:>12}")
+@@ -324,7 +350,7 @@
+         batch_stream = _PrefetchStream(
+             lambda: _stream_batches(tokenizer, global_batch_size,
+                                     args.max_enc_len, args.max_dec_len,
+-                                    seed=stream_seed),
++                                    seed=stream_seed, data=data),
+             prefetch=8,
+         )
+ 
+diff -ruN '--exclude=.venv' '--exclude=checkpoints' '--exclude=tokenizer' '--exclude=GUIDE_zh.md' '--exclude=local_changes.diff' '--exclude=*.egg-info' '--exclude=__pycache__' a/dana/training/train.py dana/dana/training/train.py
+--- a/dana/training/train.py	2026-08-09 21:23:00.000000000 +0900
++++ b/dana/training/train.py	2026-11-13 01:36:15.284529232 +0900
+@@ -24,7 +24,7 @@
+ )
+ from .optim import create_train_state, _wsd_schedule
+ from ..utils.distributed import (
+-    _replicate, _unreplicate, shard_batch, _upload_checkpoint,
++    _replicate, _unreplicate, shard_batch, _upload_checkpoint, _download_checkpoint,
+     load_pretrained_params, partial_load_params,
+ )
+ from ..model.quantize import _quantize_params
+@@ -201,18 +201,7 @@
+ 
+     resume_checkpoint = getattr(args, "checkpoint", None)
+     if resume_checkpoint:
+-        if not os.path.exists(resume_checkpoint):
+-            print(f"  Checkpoint not found locally, downloading from HF...", flush=True)
+-            from huggingface_hub import hf_hub_download
+-            local_dir = os.path.dirname(resume_checkpoint) or "checkpoints"
+-            os.makedirs(local_dir, exist_ok=True)
+-            resume_checkpoint = hf_hub_download(
+-                repo_id="Cactus-Compute/checkpoints",
+-                filename=os.path.basename(resume_checkpoint),
+-                repo_type="model",
+-                local_dir=local_dir,
+-            )
+-            print(f"  Downloaded to {resume_checkpoint}", flush=True)
++        resume_checkpoint = _download_checkpoint(resume_checkpoint)
+         print(f"Resuming from checkpoint: {resume_checkpoint}")
+         with open(resume_checkpoint, "rb") as f:
+             ckpt_data = pickle.load(f)
+diff -ruN '--exclude=.venv' '--exclude=checkpoints' '--exclude=tokenizer' '--exclude=GUIDE_zh.md' '--exclude=local_changes.diff' '--exclude=*.egg-info' '--exclude=__pycache__' a/dana/utils/distributed.py dana/dana/utils/distributed.py
+--- a/dana/utils/distributed.py	2026-08-09 21:23:00.000000000 +0900
++++ b/dana/utils/distributed.py	2026-11-13 01:35:50.415185726 +0900
+@@ -5,17 +5,22 @@
+ import jax.numpy as jnp
+ import numpy as np
+ 
+-_HF_CHECKPOINT_REPO = "Cactus-Compute/checkpoints"
++# Upload and remote-resume target for checkpoints; unset keeps everything local.
++_HF_CHECKPOINT_REPO = os.environ.get("DANA_HF_CHECKPOINT_REPO") or None
++_upload_note_shown = False
+ 
+ 
+ def _download_checkpoint(name_or_path):
+     """Return a local path to a checkpoint, downloading from HF if needed.
+ 
+     If `name_or_path` already exists on disk, it's returned unchanged.
+-    Otherwise treats the basename as a file in `Cactus-Compute/checkpoints`.
++    Otherwise treats the basename as a file in $DANA_HF_CHECKPOINT_REPO.
+     """
+     if os.path.exists(name_or_path):
+         return name_or_path
++    if not _HF_CHECKPOINT_REPO:
++        raise FileNotFoundError(
++            f"{name_or_path} not found; set DANA_HF_CHECKPOINT_REPO=<you>/<repo> to fetch it from HF")
+     from huggingface_hub import hf_hub_download
+     local_dir = os.path.dirname(name_or_path) or "checkpoints"
+     os.makedirs(local_dir, exist_ok=True)
+@@ -143,8 +148,15 @@
+ 
+ 
+ def _upload_checkpoint(ckpt_path):
+-    """Upload a checkpoint file to HuggingFace Hub in a background thread."""
++    """Upload a checkpoint file to $DANA_HF_CHECKPOINT_REPO in a background thread (no-op when unset)."""
+     import threading
++    global _upload_note_shown
++
++    if not _HF_CHECKPOINT_REPO:
++        if not _upload_note_shown:
++            print("[hf] checkpoint kept local (set DANA_HF_CHECKPOINT_REPO=<you>/<repo> to upload)")
++            _upload_note_shown = True
++        return
+ 
+     def _upload():
+         try:
+diff -ruN '--exclude=.venv' '--exclude=checkpoints' '--exclude=tokenizer' '--exclude=GUIDE_zh.md' '--exclude=local_changes.diff' '--exclude=*.egg-info' '--exclude=__pycache__' a/dana/utils/tpu.py dana/dana/utils/tpu.py
+--- a/dana/utils/tpu.py	2026-08-09 21:23:00.000000000 +0900
++++ b/dana/utils/tpu.py	2026-11-13 01:36:15.284640442 +0900
+@@ -447,7 +447,7 @@
+     Preserves .venv, .data_cache, and checkpoints on workers if they exist.
+     """
+     import tempfile
+-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ 
+     tarball = os.path.join(tempfile.gettempdir(), "dana_sync.tar.gz")
+     print(f"[tpu] Creating tarball (excluding .venv, .data_cache, .git)...")
+diff -ruN '--exclude=.venv' '--exclude=checkpoints' '--exclude=tokenizer' '--exclude=GUIDE_zh.md' '--exclude=local_changes.diff' '--exclude=*.egg-info' '--exclude=__pycache__' a/README.md dana/README.md
+--- a/README.md	2026-08-09 21:23:00.000000000 +0900
++++ b/README.md	2026-11-13 01:39:28.446926572 +0900
+@@ -1,3 +1,5 @@
++> **独立版说明**：这是 Dana 1 的独立副本（上游 `cactus-compute/cactus@a5af1f8` + 官方权重），做了本地化改动。中文使用说明和改动列表见 [GUIDE_zh.md](GUIDE_zh.md)。
++
+ # Dana
+ 
+ <img src="assets/banner.png" alt="Logo" style="border-radius: 30px; width: 100%;">
+diff -ruN '--exclude=.venv' '--exclude=checkpoints' '--exclude=tokenizer' '--exclude=GUIDE_zh.md' '--exclude=local_changes.diff' '--exclude=*.egg-info' '--exclude=__pycache__' a/setup dana/setup
+--- a/setup	2026-08-09 21:23:00.000000000 +0900
++++ b/setup	2026-11-13 01:37:32.709949200 +0900
+@@ -67,11 +67,18 @@
+ pip install --upgrade pip -q
+ pip install -e . -q
+ 
+-# Detect accelerator and install the matching JAX build
++# Detect accelerator and install the matching JAX build (DANA_ACCELERATOR=cpu|gpu|tpu overrides).
++# A /sys/class/accel device counts as a TPU only when its PCI vendor is Google (0x1ae0), so an
++# Intel or AMD NPU does not pull in jax[tpu]; an accel class with no devices yet (TPU kernel
++# modules not loaded) still does.
++ACCEL_VENDORS=$(cat /sys/class/accel/accel*/device/vendor 2>/dev/null)
+ ACCELERATOR="cpu"
+-if command -v nvidia-smi &>/dev/null && nvidia-smi &>/dev/null; then
++if [ -n "$DANA_ACCELERATOR" ]; then
++    ACCELERATOR="$DANA_ACCELERATOR"
++elif command -v nvidia-smi &>/dev/null && nvidia-smi &>/dev/null; then
+     ACCELERATOR="gpu"
+-elif ls /dev/accel* &>/dev/null 2>&1 || [ -n "$TPU_NAME" ] || [ -d /sys/class/accel ]; then
++elif [ -n "$TPU_NAME" ] || echo "$ACCEL_VENDORS" | grep -q 0x1ae0 \
++        || { [ -d /sys/class/accel ] && [ -z "$ACCEL_VENDORS" ]; }; then
+     ACCELERATOR="tpu"
+ fi
+ 

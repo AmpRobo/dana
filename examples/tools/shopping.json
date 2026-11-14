@@ -1,0 +1,40 @@
+[
+ {
+  "name": "search_product",
+  "description": "Search for a product to buy online.",
+  "parameters": {
+   "query": {
+    "type": "string",
+    "description": "Product search query.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "add_to_cart",
+  "description": "Add a product to the shopping cart.",
+  "parameters": {
+   "product_name": {
+    "type": "string",
+    "description": "Name or description of the product.",
+    "required": true
+   },
+   "quantity": {
+    "type": "number",
+    "description": "Number of items to add.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "check_order_status",
+  "description": "Check the status of a recent order.",
+  "parameters": {
+   "order_id": {
+    "type": "string",
+    "description": "The order ID to check. If omitted, checks the most recent order.",
+    "required": false
+   }
+  }
+ }
+]

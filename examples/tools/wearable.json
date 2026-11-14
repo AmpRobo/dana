@@ -1,0 +1,87 @@
+[
+ {
+  "name": "check_heart_rate",
+  "description": "Check the current heart rate from the wearable sensor.",
+  "parameters": {}
+ },
+ {
+  "name": "check_blood_oxygen",
+  "description": "Check the current blood oxygen level.",
+  "parameters": {}
+ },
+ {
+  "name": "start_breathing_exercise",
+  "description": "Start a guided breathing exercise.",
+  "parameters": {
+   "duration_minutes": {
+    "type": "number",
+    "description": "Duration of the exercise in minutes.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "find_my_phone",
+  "description": "Trigger the phone to ring so you can find it.",
+  "parameters": {}
+ },
+ {
+  "name": "toggle_always_on_display",
+  "description": "Enable or disable the always-on display.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "change_watch_face",
+  "description": "Change the watch face.",
+  "parameters": {
+   "face_name": {
+    "type": "string",
+    "description": "Name of the watch face to switch to.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "set_activity_goal",
+  "description": "Set a daily activity goal.",
+  "parameters": {
+   "goal_type": {
+    "type": "string",
+    "description": "'steps', 'calories', or 'distance'.",
+    "required": true
+   },
+   "value": {
+    "type": "number",
+    "description": "The target value for the goal.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "check_activity_progress",
+  "description": "Check progress toward the current activity goal.",
+  "parameters": {}
+ },
+ {
+  "name": "toggle_fall_detection",
+  "description": "Enable or disable fall detection.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "trigger_emergency_sos",
+  "description": "Trigger an emergency SOS alert.",
+  "parameters": {}
+ }
+]

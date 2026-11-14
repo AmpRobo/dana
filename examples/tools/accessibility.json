@@ -1,0 +1,46 @@
+[
+ {
+  "name": "set_font_size",
+  "description": "Set the system font size.",
+  "parameters": {
+   "size": {
+    "type": "string",
+    "description": "'small', 'medium', 'large', or 'extra_large'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_voice_assistant",
+  "description": "Enable or disable the voice assistant listener.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_magnifier",
+  "description": "Enable or disable the screen magnifier.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_screen_reader",
+  "description": "Enable or disable the screen reader for accessibility.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ }
+]

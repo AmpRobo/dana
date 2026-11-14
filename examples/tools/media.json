@@ -1,0 +1,126 @@
+[
+ {
+  "name": "play_music",
+  "description": "Play music by song name, artist, album, or genre.",
+  "parameters": {
+   "query": {
+    "type": "string",
+    "description": "Search query: song title, artist name, album, or genre.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "pause_media",
+  "description": "Pause the currently playing media.",
+  "parameters": {}
+ },
+ {
+  "name": "resume_media",
+  "description": "Resume the paused media playback.",
+  "parameters": {}
+ },
+ {
+  "name": "skip_track",
+  "description": "Skip to the next track in the current playlist.",
+  "parameters": {}
+ },
+ {
+  "name": "previous_track",
+  "description": "Go back to the previous track.",
+  "parameters": {}
+ },
+ {
+  "name": "play_podcast",
+  "description": "Play a podcast by name or topic.",
+  "parameters": {
+   "query": {
+    "type": "string",
+    "description": "Podcast name or topic to search for.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "play_radio",
+  "description": "Play a radio station by name or frequency.",
+  "parameters": {
+   "station": {
+    "type": "string",
+    "description": "Station name or frequency e.g. 'NPR', '101.1 FM'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "play_audiobook",
+  "description": "Play an audiobook by title or author.",
+  "parameters": {
+   "query": {
+    "type": "string",
+    "description": "Audiobook title or author name.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "set_repeat_mode",
+  "description": "Set the media repeat mode.",
+  "parameters": {
+   "mode": {
+    "type": "string",
+    "description": "'off', 'one', or 'all'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "set_shuffle",
+  "description": "Enable or disable shuffle playback.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable shuffle, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_now_playing",
+  "description": "Get info about the currently playing media.",
+  "parameters": {}
+ },
+ {
+  "name": "add_to_playlist",
+  "description": "Add the current song to a playlist.",
+  "parameters": {
+   "playlist_name": {
+    "type": "string",
+    "description": "Name of the playlist.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "play_playlist",
+  "description": "Play a specific playlist by name.",
+  "parameters": {
+   "playlist_name": {
+    "type": "string",
+    "description": "Name of the playlist to play.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "cast_media",
+  "description": "Cast current media to a speaker or TV.",
+  "parameters": {
+   "device_name": {
+    "type": "string",
+    "description": "Name of the cast target device e.g. 'Living Room TV', 'Kitchen Speaker'.",
+    "required": true
+   }
+  }
+ }
+]

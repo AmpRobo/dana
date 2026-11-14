@@ -1,0 +1,125 @@
+[
+ {
+  "name": "get_directions",
+  "description": "Get directions to a destination.",
+  "parameters": {
+   "destination": {
+    "type": "string",
+    "description": "The destination address or place name.",
+    "required": true
+   },
+   "mode": {
+    "type": "string",
+    "description": "Travel mode: 'driving', 'walking', 'transit', 'cycling'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "share_location",
+  "description": "Share current location with a contact.",
+  "parameters": {
+   "contact_id": {
+    "type": "string",
+    "description": "The contact to share location with.",
+    "required": true
+   },
+   "duration_minutes": {
+    "type": "number",
+    "description": "How long to share location in minutes.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "find_nearby",
+  "description": "Search for nearby places by category.",
+  "parameters": {
+   "category": {
+    "type": "string",
+    "description": "Type of place e.g. 'gas station', 'restaurant', 'pharmacy', 'coffee shop'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_eta",
+  "description": "Get estimated time of arrival to a destination.",
+  "parameters": {
+   "destination": {
+    "type": "string",
+    "description": "The destination.",
+    "required": true
+   },
+   "mode": {
+    "type": "string",
+    "description": "Travel mode.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "save_location",
+  "description": "Save a location as a favorite or bookmark.",
+  "parameters": {
+   "name": {
+    "type": "string",
+    "description": "Name for the saved location e.g. 'Home', 'Work', 'Gym'.",
+    "required": true
+   },
+   "address": {
+    "type": "string",
+    "description": "The address to save.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_traffic",
+  "description": "Get current traffic conditions for a route.",
+  "parameters": {
+   "destination": {
+    "type": "string",
+    "description": "The destination to check traffic for.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "start_navigation",
+  "description": "Start turn-by-turn navigation to a destination.",
+  "parameters": {
+   "destination": {
+    "type": "string",
+    "description": "The destination.",
+    "required": true
+   },
+   "mode": {
+    "type": "string",
+    "description": "Travel mode.",
+    "required": false
+   },
+   "avoid_tolls": {
+    "type": "boolean",
+    "description": "Whether to avoid toll roads.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "stop_navigation",
+  "description": "Stop the current navigation.",
+  "parameters": {}
+ },
+ {
+  "name": "report_traffic_incident",
+  "description": "Report a traffic incident at current location.",
+  "parameters": {
+   "type": {
+    "type": "string",
+    "description": "Type of incident: 'accident', 'construction', 'hazard', 'police'.",
+    "required": true
+   }
+  }
+ }
+]

@@ -1,0 +1,55 @@
+[
+ {
+  "name": "open_tab",
+  "description": "Open a new browser tab.",
+  "parameters": {
+   "url": {
+    "type": "string",
+    "description": "Optional URL to open.",
+    "required": false
+   },
+   "query": {
+    "type": "string",
+    "description": "Optional search query to open.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "close_tab",
+  "description": "Close the current browser tab.",
+  "parameters": {}
+ },
+ {
+  "name": "bookmark_page",
+  "description": "Bookmark the current page.",
+  "parameters": {}
+ },
+ {
+  "name": "clear_browsing_data",
+  "description": "Clear browsing data.",
+  "parameters": {
+   "data_type": {
+    "type": "string",
+    "description": "'history', 'cookies', 'cache', or 'all'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "open_private_window",
+  "description": "Open a new private/incognito browser window.",
+  "parameters": {}
+ },
+ {
+  "name": "find_in_page",
+  "description": "Find text on the current page.",
+  "parameters": {
+   "text": {
+    "type": "string",
+    "description": "The text to search for.",
+    "required": true
+   }
+  }
+ }
+]

@@ -1,0 +1,65 @@
+[
+ {
+  "name": "request_ride",
+  "description": "Request a ride to a destination.",
+  "parameters": {
+   "destination": {
+    "type": "string",
+    "description": "The destination address or place name.",
+    "required": true
+   },
+   "ride_type": {
+    "type": "string",
+    "description": "'standard', 'xl', or 'shared'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "cancel_ride",
+  "description": "Cancel the current ride request.",
+  "parameters": {}
+ },
+ {
+  "name": "track_ride_eta",
+  "description": "Track the ETA of the current ride.",
+  "parameters": {}
+ },
+ {
+  "name": "rate_ride",
+  "description": "Rate a completed ride.",
+  "parameters": {
+   "rating": {
+    "type": "number",
+    "description": "Rating from 1 to 5.",
+    "required": true
+   },
+   "feedback": {
+    "type": "string",
+    "description": "Optional feedback text.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "order_food",
+  "description": "Order food delivery from a restaurant.",
+  "parameters": {
+   "restaurant": {
+    "type": "string",
+    "description": "Name of the restaurant.",
+    "required": true
+   },
+   "items": {
+    "type": "string",
+    "description": "Description of what to order.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "track_food_delivery",
+  "description": "Track the status of a food delivery order.",
+  "parameters": {}
+ }
+]

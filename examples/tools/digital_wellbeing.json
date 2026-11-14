@@ -1,0 +1,94 @@
+[
+ {
+  "name": "check_screen_time",
+  "description": "Check screen time usage.",
+  "parameters": {
+   "period": {
+    "type": "string",
+    "description": "'today' or 'week'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "set_app_timer",
+  "description": "Set a usage time limit for an app.",
+  "parameters": {
+   "app_name": {
+    "type": "string",
+    "description": "Name of the app to limit.",
+    "required": true
+   },
+   "duration_minutes": {
+    "type": "number",
+    "description": "Maximum usage time in minutes.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_bedtime_mode",
+  "description": "Enable or disable bedtime mode.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "set_content_restriction",
+  "description": "Set content restriction level.",
+  "parameters": {
+   "restriction_level": {
+    "type": "string",
+    "description": "'off', 'moderate', or 'strict'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "check_app_usage",
+  "description": "Check usage statistics for an app.",
+  "parameters": {
+   "app_name": {
+    "type": "string",
+    "description": "Optional app name to check. Shows all apps if omitted.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "pause_all_notifications",
+  "description": "Temporarily pause all notifications.",
+  "parameters": {
+   "duration_minutes": {
+    "type": "number",
+    "description": "Optional duration in minutes before resuming notifications.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "get_daily_summary",
+  "description": "Get a daily summary of device usage and wellbeing stats.",
+  "parameters": {}
+ },
+ {
+  "name": "set_downtime_schedule",
+  "description": "Set a recurring downtime schedule to limit device use.",
+  "parameters": {
+   "start_time": {
+    "type": "string",
+    "description": "Start time for downtime e.g. '22:00'.",
+    "required": true
+   },
+   "end_time": {
+    "type": "string",
+    "description": "End time for downtime e.g. '07:00'.",
+    "required": true
+   }
+  }
+ }
+]

@@ -1,0 +1,176 @@
+[
+ {
+  "name": "set_brightness",
+  "description": "Set the screen brightness level.",
+  "parameters": {
+   "level": {
+    "type": "number",
+    "description": "Brightness level from 0 to 100.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "set_volume",
+  "description": "Set the device volume level.",
+  "parameters": {
+   "level": {
+    "type": "number",
+    "description": "Volume level from 0 to 100.",
+    "required": true
+   },
+   "stream": {
+    "type": "string",
+    "description": "Which audio stream: 'media', 'ringtone', 'alarm', 'notification'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "toggle_wifi",
+  "description": "Turn Wi-Fi on or off.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_bluetooth",
+  "description": "Turn Bluetooth on or off.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_flashlight",
+  "description": "Turn the flashlight on or off.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to turn on, false to turn off.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_do_not_disturb",
+  "description": "Enable or disable Do Not Disturb mode.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable DND, false to disable.",
+    "required": true
+   },
+   "duration_minutes": {
+    "type": "number",
+    "description": "Optional duration in minutes before auto-disabling.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "set_screen_timeout",
+  "description": "Set the screen auto-lock timeout duration.",
+  "parameters": {
+   "seconds": {
+    "type": "number",
+    "description": "Timeout in seconds (e.g. 30, 60, 120, 300).",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_auto_brightness",
+  "description": "Enable or disable automatic brightness adjustment.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_auto_rotate",
+  "description": "Enable or disable auto screen rotation.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_hotspot",
+  "description": "Enable or disable the mobile hotspot.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   },
+   "password": {
+    "type": "string",
+    "description": "Optional hotspot password.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "toggle_power_saving",
+  "description": "Enable or disable battery power saving mode.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "connect_bluetooth_device",
+  "description": "Connect to a specific Bluetooth device by name.",
+  "parameters": {
+   "device_name": {
+    "type": "string",
+    "description": "Name of the Bluetooth device e.g. 'AirPods Pro', 'JBL Speaker'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "connect_wifi_network",
+  "description": "Connect to a specific Wi-Fi network.",
+  "parameters": {
+   "ssid": {
+    "type": "string",
+    "description": "Name of the Wi-Fi network.",
+    "required": true
+   },
+   "password": {
+    "type": "string",
+    "description": "Wi-Fi password if required.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "toggle_night_mode",
+  "description": "Enable or disable night/blue light filter.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ }
+]

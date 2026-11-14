@@ -1,0 +1,55 @@
+[
+ {
+  "name": "start_screen_recording",
+  "description": "Start recording the screen.",
+  "parameters": {
+   "audio": {
+    "type": "boolean",
+    "description": "Whether to record microphone audio too.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "stop_screen_recording",
+  "description": "Stop the current screen recording and save it.",
+  "parameters": {}
+ },
+ {
+  "name": "take_scrolling_screenshot",
+  "description": "Take a long scrolling screenshot of the current page.",
+  "parameters": {}
+ },
+ {
+  "name": "annotate_screenshot",
+  "description": "Open the most recent screenshot for annotation/markup.",
+  "parameters": {}
+ },
+ {
+  "name": "screen_mirror",
+  "description": "Mirror the screen to an external display.",
+  "parameters": {
+   "device_name": {
+    "type": "string",
+    "description": "Name of the display e.g. 'Living Room TV', 'Office Monitor'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "stop_screen_mirror",
+  "description": "Stop screen mirroring.",
+  "parameters": {}
+ },
+ {
+  "name": "picture_in_picture",
+  "description": "Enable or disable picture-in-picture mode for the current app.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ }
+]

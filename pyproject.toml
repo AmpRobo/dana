@@ -1,0 +1,32 @@
+[project]
+name = "dana"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "jax",
+    "jaxlib",
+    "flax",
+    "optax",
+    "datasets",
+    "wandb",
+    "sentencepiece",
+    "scipy",
+    "safetensors",
+    "gcsfs",
+    "tqdm",
+    "google-genai",
+]
+
+[project.optional-dependencies]
+tpu = ["jax[tpu]"]
+gpu = ["jax[cuda12]"]
+
+[project.scripts]
+dana = "dana.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["dana*"]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

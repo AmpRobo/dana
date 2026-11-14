@@ -1,0 +1,492 @@
+[
+ {
+  "name": "minimize_window",
+  "description": "Minimize the current window.",
+  "parameters": {}
+ },
+ {
+  "name": "maximize_window",
+  "description": "Maximize the current window.",
+  "parameters": {}
+ },
+ {
+  "name": "split_screen",
+  "description": "Snap the current window to a screen position.",
+  "parameters": {
+   "position": {
+    "type": "string",
+    "description": "'left' or 'right'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "switch_virtual_desktop",
+  "description": "Switch to another virtual desktop.",
+  "parameters": {
+   "direction": {
+    "type": "string",
+    "description": "'next', 'previous', or a desktop number.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_vpn",
+  "description": "Turn VPN on or off.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   },
+   "server": {
+    "type": "string",
+    "description": "Optional VPN server name or location.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "switch_audio_output",
+  "description": "Switch the audio output device.",
+  "parameters": {
+   "device_name": {
+    "type": "string",
+    "description": "Name of the output device e.g. 'External Speakers', 'HDMI'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "switch_audio_input",
+  "description": "Switch the audio input device.",
+  "parameters": {
+   "device_name": {
+    "type": "string",
+    "description": "Name of the input device e.g. 'External Mic', 'Webcam'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "print_document",
+  "description": "Print the current document.",
+  "parameters": {
+   "printer_name": {
+    "type": "string",
+    "description": "Optional printer name.",
+    "required": false
+   },
+   "copies": {
+    "type": "number",
+    "description": "Number of copies to print.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "check_system_updates",
+  "description": "Check for available system updates.",
+  "parameters": {}
+ },
+ {
+  "name": "install_system_updates",
+  "description": "Install available system updates.",
+  "parameters": {}
+ },
+ {
+  "name": "take_screenshot_region",
+  "description": "Take a screenshot of a specific region.",
+  "parameters": {
+   "region": {
+    "type": "string",
+    "description": "'full', 'window', or 'selection'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "kill_process",
+  "description": "Force quit an application by name.",
+  "parameters": {
+   "app_name": {
+    "type": "string",
+    "description": "Name of the application to kill.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "check_system_resources",
+  "description": "Check current CPU, memory, and disk usage.",
+  "parameters": {}
+ },
+ {
+  "name": "open_app",
+  "description": "Open an application by name.",
+  "parameters": {
+   "app_name": {
+    "type": "string",
+    "description": "Name of the application e.g. 'Firefox', 'Terminal', 'Files'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "switch_to_app",
+  "description": "Bring an open application's window to the front.",
+  "parameters": {
+   "app_name": {
+    "type": "string",
+    "description": "Name of the application to switch to.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "close_window",
+  "description": "Close the current window.",
+  "parameters": {}
+ },
+ {
+  "name": "restore_window",
+  "description": "Restore the current window to its previous size.",
+  "parameters": {}
+ },
+ {
+  "name": "toggle_fullscreen",
+  "description": "Make the current window full screen or leave full screen.",
+  "parameters": {}
+ },
+ {
+  "name": "show_desktop",
+  "description": "Hide all windows to show the desktop.",
+  "parameters": {}
+ },
+ {
+  "name": "show_all_windows",
+  "description": "Show an overview of all open windows.",
+  "parameters": {}
+ },
+ {
+  "name": "move_window_to_monitor",
+  "description": "Move the current window to another monitor.",
+  "parameters": {
+   "direction": {
+    "type": "string",
+    "description": "'left', 'right', or 'next'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "move_window_to_desktop",
+  "description": "Move the current window to another virtual desktop.",
+  "parameters": {
+   "desktop": {
+    "type": "string",
+    "description": "'next', 'previous', or a desktop number.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "set_volume",
+  "description": "Set the output volume to a level.",
+  "parameters": {
+   "level": {
+    "type": "number",
+    "description": "Volume from 0 to 100.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "adjust_volume",
+  "description": "Turn the volume up or down a step.",
+  "parameters": {
+   "direction": {
+    "type": "string",
+    "description": "'up' or 'down'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "mute_audio",
+  "description": "Mute or unmute the sound output.",
+  "parameters": {
+   "muted": {
+    "type": "boolean",
+    "description": "True to mute, false to unmute.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "mute_microphone",
+  "description": "Mute or unmute the microphone.",
+  "parameters": {
+   "muted": {
+    "type": "boolean",
+    "description": "True to mute, false to unmute.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "media_control",
+  "description": "Control the music or video that is playing.",
+  "parameters": {
+   "action": {
+    "type": "string",
+    "description": "'play', 'pause', 'next', 'previous', or 'stop'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "set_brightness",
+  "description": "Set the screen brightness.",
+  "parameters": {
+   "level": {
+    "type": "number",
+    "description": "Brightness from 0 to 100.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_dark_mode",
+  "description": "Turn dark mode on or off.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True for dark mode, false for light mode.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_night_light",
+  "description": "Turn the night light (blue light filter) on or off.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "start_screen_recording",
+  "description": "Start recording the screen.",
+  "parameters": {}
+ },
+ {
+  "name": "stop_screen_recording",
+  "description": "Stop the screen recording and save it.",
+  "parameters": {}
+ },
+ {
+  "name": "lock_screen",
+  "description": "Lock the screen.",
+  "parameters": {}
+ },
+ {
+  "name": "log_out",
+  "description": "Log out of the current user session.",
+  "parameters": {}
+ },
+ {
+  "name": "sleep_computer",
+  "description": "Put the computer to sleep.",
+  "parameters": {}
+ },
+ {
+  "name": "restart_computer",
+  "description": "Restart the computer.",
+  "parameters": {}
+ },
+ {
+  "name": "shut_down_computer",
+  "description": "Shut down the computer.",
+  "parameters": {
+   "delay_minutes": {
+    "type": "number",
+    "description": "Optional minutes to wait before shutting down.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "set_power_mode",
+  "description": "Change the power mode.",
+  "parameters": {
+   "mode": {
+    "type": "string",
+    "description": "'power saver', 'balanced', or 'performance'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "check_battery",
+  "description": "Check the battery level and charging status.",
+  "parameters": {}
+ },
+ {
+  "name": "toggle_do_not_disturb",
+  "description": "Turn Do Not Disturb on or off.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "clear_notifications",
+  "description": "Dismiss all notifications.",
+  "parameters": {}
+ },
+ {
+  "name": "open_settings",
+  "description": "Open system settings, or one settings page.",
+  "parameters": {
+   "page": {
+    "type": "string",
+    "description": "Optional page e.g. 'display', 'sound', 'network', 'bluetooth'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "toggle_wifi",
+  "description": "Turn Wi-Fi on or off.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_bluetooth",
+  "description": "Turn Bluetooth on or off.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "connect_bluetooth_device",
+  "description": "Connect to a Bluetooth device by name.",
+  "parameters": {
+   "device_name": {
+    "type": "string",
+    "description": "Name of the device e.g. 'AirPods', 'Keyboard'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "open_folder",
+  "description": "Open a folder in the file manager.",
+  "parameters": {
+   "folder": {
+    "type": "string",
+    "description": "Folder name or path e.g. 'Downloads', 'Documents', '~/code'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "open_file",
+  "description": "Open a file by name.",
+  "parameters": {
+   "file_name": {
+    "type": "string",
+    "description": "Name or path of the file.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "search_files",
+  "description": "Search for files on the computer.",
+  "parameters": {
+   "query": {
+    "type": "string",
+    "description": "File name or words to search for.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "empty_trash",
+  "description": "Empty the trash.",
+  "parameters": {}
+ },
+ {
+  "name": "open_website",
+  "description": "Open a website in the browser.",
+  "parameters": {
+   "url": {
+    "type": "string",
+    "description": "Website address e.g. 'github.com'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "web_search",
+  "description": "Search the web.",
+  "parameters": {
+   "query": {
+    "type": "string",
+    "description": "What to search for.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "type_text",
+  "description": "Type text into the focused window.",
+  "parameters": {
+   "text": {
+    "type": "string",
+    "description": "The text to type.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "press_keys",
+  "description": "Press a keyboard shortcut.",
+  "parameters": {
+   "keys": {
+    "type": "string",
+    "description": "Keys joined by '+' e.g. 'ctrl+c', 'alt+tab', 'enter'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "copy_to_clipboard",
+  "description": "Copy text to the clipboard.",
+  "parameters": {
+   "text": {
+    "type": "string",
+    "description": "The text to copy.",
+    "required": true
+   }
+  }
+ }
+]

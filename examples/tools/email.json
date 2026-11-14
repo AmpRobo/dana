@@ -1,0 +1,141 @@
+[
+ {
+  "name": "compose_email",
+  "description": "Compose and send an email.",
+  "parameters": {
+   "to": {
+    "type": "string",
+    "description": "Recipient email address.",
+    "required": true
+   },
+   "subject": {
+    "type": "string",
+    "description": "Email subject line.",
+    "required": true
+   },
+   "body": {
+    "type": "string",
+    "description": "Email body text.",
+    "required": true
+   },
+   "cc": {
+    "type": "string",
+    "description": "Optional CC recipients.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "reply_email",
+  "description": "Reply to the most recent or specified email.",
+  "parameters": {
+   "body": {
+    "type": "string",
+    "description": "Reply text.",
+    "required": true
+   },
+   "subject_match": {
+    "type": "string",
+    "description": "Optional subject line to identify which email to reply to.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "forward_email",
+  "description": "Forward an email to someone.",
+  "parameters": {
+   "to": {
+    "type": "string",
+    "description": "Recipient to forward to.",
+    "required": true
+   },
+   "subject_match": {
+    "type": "string",
+    "description": "Subject line to identify the email.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "archive_email",
+  "description": "Archive an email.",
+  "parameters": {
+   "subject_match": {
+    "type": "string",
+    "description": "Subject line to identify the email.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "snooze_email",
+  "description": "Snooze an email to reappear later.",
+  "parameters": {
+   "subject_match": {
+    "type": "string",
+    "description": "Subject line to identify the email.",
+    "required": true
+   },
+   "snooze_until": {
+    "type": "string",
+    "description": "When to resurface e.g. 'tomorrow morning', 'next Monday'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "label_email",
+  "description": "Apply a label or folder to an email.",
+  "parameters": {
+   "subject_match": {
+    "type": "string",
+    "description": "Subject to identify the email.",
+    "required": true
+   },
+   "label": {
+    "type": "string",
+    "description": "Label name e.g. 'work', 'personal', 'receipts'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "mark_email_spam",
+  "description": "Mark an email as spam.",
+  "parameters": {
+   "subject_match": {
+    "type": "string",
+    "description": "Subject to identify the email.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_unread_emails",
+  "description": "Get unread emails, optionally filtered.",
+  "parameters": {
+   "from_contact": {
+    "type": "string",
+    "description": "Optional sender name to filter by.",
+    "required": false
+   },
+   "count": {
+    "type": "number",
+    "description": "Number of emails to show.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "search_email",
+  "description": "Search emails by keyword.",
+  "parameters": {
+   "query": {
+    "type": "string",
+    "description": "Search query.",
+    "required": true
+   }
+  }
+ }
+]

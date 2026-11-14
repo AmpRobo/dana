@@ -1,0 +1,83 @@
+[
+ {
+  "name": "toggle_mobile_data",
+  "description": "Turn mobile data on or off.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_nfc",
+  "description": "Turn NFC on or off.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "share_wifi",
+  "description": "Share the current WiFi network credentials via QR code or nearby share.",
+  "parameters": {}
+ },
+ {
+  "name": "get_data_usage",
+  "description": "Check mobile data usage for the current billing period.",
+  "parameters": {}
+ },
+ {
+  "name": "set_data_limit",
+  "description": "Set a mobile data usage warning or limit.",
+  "parameters": {
+   "limit_gb": {
+    "type": "number",
+    "description": "Data limit in gigabytes.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_wifi_info",
+  "description": "Get info about the current WiFi connection: network name, signal strength, speed.",
+  "parameters": {}
+ },
+ {
+  "name": "forget_wifi_network",
+  "description": "Forget a saved WiFi network.",
+  "parameters": {
+   "ssid": {
+    "type": "string",
+    "description": "Name of the WiFi network to forget.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_connected_devices",
+  "description": "List all Bluetooth or WiFi devices currently connected.",
+  "parameters": {
+   "connection_type": {
+    "type": "string",
+    "description": "'bluetooth' or 'wifi'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "disconnect_bluetooth_device",
+  "description": "Disconnect a specific Bluetooth device.",
+  "parameters": {
+   "device_name": {
+    "type": "string",
+    "description": "Name of the device to disconnect.",
+    "required": true
+   }
+  }
+ }
+]

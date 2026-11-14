@@ -1,0 +1,115 @@
+[
+ {
+  "name": "get_family_location",
+  "description": "Check the current location of a family member.",
+  "parameters": {
+   "member": {
+    "type": "string",
+    "description": "Name of the family member.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "set_child_screen_time",
+  "description": "Set a daily screen time limit for a child's device.",
+  "parameters": {
+   "child_name": {
+    "type": "string",
+    "description": "Name of the child.",
+    "required": true
+   },
+   "minutes": {
+    "type": "number",
+    "description": "Daily screen time limit in minutes.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "lock_child_device",
+  "description": "Immediately lock or unlock a child's device.",
+  "parameters": {
+   "child_name": {
+    "type": "string",
+    "description": "Name of the child.",
+    "required": true
+   },
+   "action": {
+    "type": "string",
+    "description": "'lock' or 'unlock'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_child_activity",
+  "description": "Get a child's recent device activity and app usage.",
+  "parameters": {
+   "child_name": {
+    "type": "string",
+    "description": "Name of the child.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "set_content_filter",
+  "description": "Set content filtering level for a child's device.",
+  "parameters": {
+   "child_name": {
+    "type": "string",
+    "description": "Name of the child.",
+    "required": true
+   },
+   "level": {
+    "type": "string",
+    "description": "'strict', 'moderate', or 'off'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "send_family_broadcast",
+  "description": "Send a message to all family members.",
+  "parameters": {
+   "message": {
+    "type": "string",
+    "description": "The message to broadcast.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "set_family_geofence",
+  "description": "Set an alert when a family member arrives at or leaves a location.",
+  "parameters": {
+   "member": {
+    "type": "string",
+    "description": "Family member name.",
+    "required": true
+   },
+   "location": {
+    "type": "string",
+    "description": "Location name e.g. 'school', 'home', 'work'.",
+    "required": true
+   },
+   "trigger": {
+    "type": "string",
+    "description": "'arrive' or 'leave'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "request_check_in",
+  "description": "Send a check-in request to a family member.",
+  "parameters": {
+   "member": {
+    "type": "string",
+    "description": "Family member name.",
+    "required": true
+   }
+  }
+ }
+]

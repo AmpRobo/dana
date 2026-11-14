@@ -1,0 +1,88 @@
+[
+ {
+  "name": "run_shortcut",
+  "description": "Run a saved automation shortcut by name.",
+  "parameters": {
+   "name": {
+    "type": "string",
+    "description": "Name of the shortcut e.g. 'morning routine', 'bedtime', 'leaving home'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "create_routine",
+  "description": "Create a new automation routine with a trigger and actions.",
+  "parameters": {
+   "name": {
+    "type": "string",
+    "description": "Name for the routine.",
+    "required": true
+   },
+   "trigger": {
+    "type": "string",
+    "description": "When to run e.g. 'every weekday at 7am', 'when I arrive home', 'at sunset'.",
+    "required": true
+   },
+   "actions": {
+    "type": "string",
+    "description": "Description of actions to perform.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "list_routines",
+  "description": "List all saved automation routines.",
+  "parameters": {}
+ },
+ {
+  "name": "delete_routine",
+  "description": "Delete an automation routine by name.",
+  "parameters": {
+   "name": {
+    "type": "string",
+    "description": "Name of the routine to delete.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_routine",
+  "description": "Enable or disable an automation routine.",
+  "parameters": {
+   "name": {
+    "type": "string",
+    "description": "Name of the routine.",
+    "required": true
+   },
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "run_scene",
+  "description": "Activate a smart home scene.",
+  "parameters": {
+   "scene_name": {
+    "type": "string",
+    "description": "Scene name e.g. 'movie night', 'dinner party', 'good morning', 'away'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_routine_history",
+  "description": "Check when a routine last ran.",
+  "parameters": {
+   "name": {
+    "type": "string",
+    "description": "Name of the routine.",
+    "required": true
+   }
+  }
+ }
+]

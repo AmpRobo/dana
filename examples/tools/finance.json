@@ -1,0 +1,177 @@
+[
+ {
+  "name": "send_payment",
+  "description": "Send a payment to a contact.",
+  "parameters": {
+   "contact_id": {
+    "type": "string",
+    "description": "The recipient contact ID.",
+    "required": true
+   },
+   "amount": {
+    "type": "number",
+    "description": "The amount to send.",
+    "required": true
+   },
+   "currency": {
+    "type": "string",
+    "description": "Currency code e.g. 'USD', 'EUR', 'GBP'.",
+    "required": false
+   },
+   "note": {
+    "type": "string",
+    "description": "Optional payment note e.g. 'for dinner'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "check_balance",
+  "description": "Check the current account balance.",
+  "parameters": {
+   "account": {
+    "type": "string",
+    "description": "Account name e.g. 'checking', 'savings', 'credit card'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "convert_currency",
+  "description": "Convert an amount between currencies.",
+  "parameters": {
+   "amount": {
+    "type": "number",
+    "description": "The amount to convert.",
+    "required": true
+   },
+   "from_currency": {
+    "type": "string",
+    "description": "Source currency code e.g. 'USD'.",
+    "required": true
+   },
+   "to_currency": {
+    "type": "string",
+    "description": "Target currency code e.g. 'EUR'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "request_payment",
+  "description": "Request a payment from a contact.",
+  "parameters": {
+   "contact_id": {
+    "type": "string",
+    "description": "The contact to request payment from.",
+    "required": true
+   },
+   "amount": {
+    "type": "number",
+    "description": "The amount to request.",
+    "required": true
+   },
+   "note": {
+    "type": "string",
+    "description": "Optional note for the request.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "get_recent_transactions",
+  "description": "Get a list of recent transactions.",
+  "parameters": {
+   "count": {
+    "type": "number",
+    "description": "Number of transactions to retrieve.",
+    "required": false
+   },
+   "account": {
+    "type": "string",
+    "description": "Optional account name to filter by.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "set_budget",
+  "description": "Set a spending budget for a category.",
+  "parameters": {
+   "category": {
+    "type": "string",
+    "description": "Budget category e.g. 'food', 'entertainment', 'transport'.",
+    "required": true
+   },
+   "amount": {
+    "type": "number",
+    "description": "The budget amount.",
+    "required": true
+   },
+   "period": {
+    "type": "string",
+    "description": "Optional budget period e.g. 'weekly', 'monthly'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "get_spending_summary",
+  "description": "Get a summary of spending for a period.",
+  "parameters": {
+   "period": {
+    "type": "string",
+    "description": "Optional period e.g. 'today', 'this_week', 'this_month'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "pay_bill",
+  "description": "Pay a bill to a biller.",
+  "parameters": {
+   "biller_name": {
+    "type": "string",
+    "description": "Name of the biller e.g. 'electric company', 'internet provider'.",
+    "required": true
+   },
+   "amount": {
+    "type": "number",
+    "description": "Optional amount to pay. Uses default if omitted.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "split_bill",
+  "description": "Split a bill among contacts.",
+  "parameters": {
+   "contact_ids": {
+    "type": "string",
+    "description": "Comma-separated contact IDs to split with.",
+    "required": true
+   },
+   "total_amount": {
+    "type": "number",
+    "description": "The total bill amount to split.",
+    "required": true
+   },
+   "note": {
+    "type": "string",
+    "description": "Optional note for the split.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "get_stock_price",
+  "description": "Get the current price of a stock.",
+  "parameters": {
+   "symbol": {
+    "type": "string",
+    "description": "The stock ticker symbol e.g. 'AAPL', 'GOOGL'.",
+    "required": true
+   }
+  }
+ }
+]

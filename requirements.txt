@@ -1,0 +1,10 @@
+jax
+jaxlib
+flax
+optax
+datasets
+gcsfs
+wandb
+pyyaml
+sentencepiece
+google-genai

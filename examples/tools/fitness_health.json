@@ -1,0 +1,110 @@
+[
+ {
+  "name": "start_workout",
+  "description": "Start tracking a workout activity.",
+  "parameters": {
+   "workout_type": {
+    "type": "string",
+    "description": "Type of workout e.g. 'running', 'cycling', 'walking', 'strength', 'yoga'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "stop_workout",
+  "description": "Stop the currently active workout tracking.",
+  "parameters": {}
+ },
+ {
+  "name": "log_water_intake",
+  "description": "Log water consumption.",
+  "parameters": {
+   "amount_ml": {
+    "type": "number",
+    "description": "Amount of water in milliliters.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_step_count",
+  "description": "Get the current step count for today.",
+  "parameters": {}
+ },
+ {
+  "name": "start_sleep_tracking",
+  "description": "Start or stop sleep tracking.",
+  "parameters": {
+   "action": {
+    "type": "string",
+    "description": "'start' or 'stop'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "log_meal",
+  "description": "Log a meal or food item for nutrition tracking.",
+  "parameters": {
+   "description": {
+    "type": "string",
+    "description": "Description of the food or meal.",
+    "required": true
+   },
+   "meal_type": {
+    "type": "string",
+    "description": "'breakfast', 'lunch', 'dinner', or 'snack'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "get_heart_rate_history",
+  "description": "Get heart rate history over a period.",
+  "parameters": {
+   "period": {
+    "type": "string",
+    "description": "Optional period e.g. 'today', 'this_week', 'this_month'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "set_step_goal",
+  "description": "Set a daily step goal.",
+  "parameters": {
+   "steps": {
+    "type": "number",
+    "description": "The target number of steps per day.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_sleep_summary",
+  "description": "Get a summary of sleep data for a given date.",
+  "parameters": {
+   "date": {
+    "type": "string",
+    "description": "Optional date in human readable format e.g. 'last night', 'yesterday'. Defaults to last night.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "log_blood_pressure",
+  "description": "Log a blood pressure reading.",
+  "parameters": {
+   "systolic": {
+    "type": "number",
+    "description": "The systolic pressure value.",
+    "required": true
+   },
+   "diastolic": {
+    "type": "number",
+    "description": "The diastolic pressure value.",
+    "required": true
+   }
+  }
+ }
+]

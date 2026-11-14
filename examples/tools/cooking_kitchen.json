@@ -1,0 +1,151 @@
+[
+ {
+  "name": "search_recipe",
+  "description": "Search for a recipe by dish name or ingredients.",
+  "parameters": {
+   "query": {
+    "type": "string",
+    "description": "Dish name or ingredients to search for.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "set_oven",
+  "description": "Preheat or set the smart oven temperature.",
+  "parameters": {
+   "temperature": {
+    "type": "number",
+    "description": "Temperature in degrees.",
+    "required": true
+   },
+   "unit": {
+    "type": "string",
+    "description": "'fahrenheit' or 'celsius'.",
+    "required": false
+   },
+   "mode": {
+    "type": "string",
+    "description": "'bake', 'broil', 'convection', or 'air_fry'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "start_dishwasher",
+  "description": "Start or schedule the dishwasher.",
+  "parameters": {
+   "cycle": {
+    "type": "string",
+    "description": "'normal', 'heavy', 'quick', or 'eco'.",
+    "required": false
+   },
+   "delay_minutes": {
+    "type": "number",
+    "description": "Optional delay before starting.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "control_coffee_maker",
+  "description": "Control the smart coffee maker.",
+  "parameters": {
+   "action": {
+    "type": "string",
+    "description": "'brew', 'stop', or 'warm'.",
+    "required": true
+   },
+   "size": {
+    "type": "string",
+    "description": "'small', 'medium', or 'large'.",
+    "required": false
+   },
+   "strength": {
+    "type": "string",
+    "description": "'mild', 'medium', or 'strong'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "cooking_convert",
+  "description": "Convert between cooking measurements.",
+  "parameters": {
+   "value": {
+    "type": "number",
+    "description": "The value to convert.",
+    "required": true
+   },
+   "from_unit": {
+    "type": "string",
+    "description": "Source unit e.g. 'cups', 'tablespoons', 'grams', 'ounces'.",
+    "required": true
+   },
+   "to_unit": {
+    "type": "string",
+    "description": "Target unit.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "set_cooking_timer",
+  "description": "Set a named cooking timer.",
+  "parameters": {
+   "label": {
+    "type": "string",
+    "description": "Label for the timer e.g. 'pasta', 'chicken', 'rice'.",
+    "required": true
+   },
+   "minutes": {
+    "type": "number",
+    "description": "Timer duration in minutes.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_substitution",
+  "description": "Get a cooking ingredient substitution.",
+  "parameters": {
+   "ingredient": {
+    "type": "string",
+    "description": "The ingredient to substitute e.g. 'buttermilk', 'eggs'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "control_slow_cooker",
+  "description": "Control the smart slow cooker.",
+  "parameters": {
+   "action": {
+    "type": "string",
+    "description": "'start', 'stop', or 'warm'.",
+    "required": true
+   },
+   "setting": {
+    "type": "string",
+    "description": "'low', 'medium', or 'high'.",
+    "required": false
+   },
+   "hours": {
+    "type": "number",
+    "description": "Cooking duration in hours.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "check_fridge_inventory",
+  "description": "Check what's in the smart fridge.",
+  "parameters": {
+   "category": {
+    "type": "string",
+    "description": "Optional category e.g. 'dairy', 'vegetables', 'drinks'.",
+    "required": false
+   }
+  }
+ }
+]

@@ -1,0 +1,73 @@
+[
+ {
+  "name": "toggle_airplane_mode",
+  "description": "Turn airplane mode on or off.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "clear_notifications",
+  "description": "Clear all or specific app notifications.",
+  "parameters": {
+   "app_name": {
+    "type": "string",
+    "description": "Optional app name to clear notifications for. Clears all if omitted.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "open_settings",
+  "description": "Open device settings or a specific settings page.",
+  "parameters": {
+   "page": {
+    "type": "string",
+    "description": "Optional settings page e.g. 'wifi', 'bluetooth', 'display', 'battery', 'storage'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "check_battery",
+  "description": "Check the current battery level and charging status.",
+  "parameters": {}
+ },
+ {
+  "name": "toggle_dark_mode",
+  "description": "Enable or disable dark mode.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True for dark mode, false for light mode.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_location_services",
+  "description": "Turn location services on or off.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "restart_device",
+  "description": "Restart or shut down the device.",
+  "parameters": {
+   "action": {
+    "type": "string",
+    "description": "'restart' or 'shutdown'.",
+    "required": true
+   }
+  }
+ }
+]

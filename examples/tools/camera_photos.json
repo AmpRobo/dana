@@ -1,0 +1,132 @@
+[
+ {
+  "name": "take_photo",
+  "description": "Take a photo using the device camera.",
+  "parameters": {
+   "camera": {
+    "type": "string",
+    "description": "'front' or 'back' camera.",
+    "required": false
+   },
+   "timer_seconds": {
+    "type": "number",
+    "description": "Optional countdown timer in seconds before taking the photo.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "record_video",
+  "description": "Start or stop recording a video.",
+  "parameters": {
+   "action": {
+    "type": "string",
+    "description": "'start' or 'stop'.",
+    "required": true
+   },
+   "camera": {
+    "type": "string",
+    "description": "'front' or 'back' camera.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "open_gallery",
+  "description": "Open the photo gallery or a specific album.",
+  "parameters": {
+   "album": {
+    "type": "string",
+    "description": "Optional album name to open.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "share_photo",
+  "description": "Share the most recent photo or a specified photo with a contact.",
+  "parameters": {
+   "contact_id": {
+    "type": "string",
+    "description": "The contact to share with.",
+    "required": true
+   },
+   "photo_description": {
+    "type": "string",
+    "description": "Description to identify which photo, e.g. 'last photo', 'screenshot'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "take_panorama",
+  "description": "Take a panoramic photo.",
+  "parameters": {
+   "direction": {
+    "type": "string",
+    "description": "Optional sweep direction e.g. 'left', 'right'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "take_burst_photos",
+  "description": "Take a burst of photos in quick succession.",
+  "parameters": {
+   "count": {
+    "type": "number",
+    "description": "Optional number of photos to take in the burst.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "edit_photo",
+  "description": "Edit a photo with a specified action.",
+  "parameters": {
+   "action": {
+    "type": "string",
+    "description": "'crop', 'rotate', or 'filter'.",
+    "required": true
+   },
+   "filter_name": {
+    "type": "string",
+    "description": "Optional filter name when action is 'filter' e.g. 'sepia', 'noir', 'vivid'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "delete_photo",
+  "description": "Delete a photo by description.",
+  "parameters": {
+   "photo_description": {
+    "type": "string",
+    "description": "Description to identify the photo to delete.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "create_photo_album",
+  "description": "Create a new photo album.",
+  "parameters": {
+   "album_name": {
+    "type": "string",
+    "description": "Name for the new album.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "search_photos",
+  "description": "Search photos by keyword or description.",
+  "parameters": {
+   "query": {
+    "type": "string",
+    "description": "Search query e.g. 'beach', 'sunset', 'birthday'.",
+    "required": true
+   }
+  }
+ }
+]

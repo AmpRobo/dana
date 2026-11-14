@@ -1,0 +1,94 @@
+[
+ {
+  "name": "open_file",
+  "description": "Open a file by name.",
+  "parameters": {
+   "file_name": {
+    "type": "string",
+    "description": "Name of the file to open.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "share_file",
+  "description": "Share a file with a contact.",
+  "parameters": {
+   "file_name": {
+    "type": "string",
+    "description": "Name of the file to share.",
+    "required": true
+   },
+   "contact_id": {
+    "type": "string",
+    "description": "The contact to share with.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "download_file",
+  "description": "Download a file from a URL.",
+  "parameters": {
+   "url": {
+    "type": "string",
+    "description": "The URL to download from.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "move_file",
+  "description": "Move a file to a different folder.",
+  "parameters": {
+   "file_name": {
+    "type": "string",
+    "description": "Name of the file to move.",
+    "required": true
+   },
+   "destination_folder": {
+    "type": "string",
+    "description": "The destination folder path.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "compress_files",
+  "description": "Compress files into an archive.",
+  "parameters": {
+   "file_names": {
+    "type": "string",
+    "description": "Description of files to compress.",
+    "required": true
+   },
+   "archive_name": {
+    "type": "string",
+    "description": "Name for the resulting archive.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "create_folder",
+  "description": "Create a new folder.",
+  "parameters": {
+   "folder_name": {
+    "type": "string",
+    "description": "Name of the folder to create.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "delete_file",
+  "description": "Delete a file.",
+  "parameters": {
+   "file_name": {
+    "type": "string",
+    "description": "Name of the file to delete.",
+    "required": true
+   }
+  }
+ }
+]

@@ -1,0 +1,99 @@
+[
+ {
+  "name": "get_news_headlines",
+  "description": "Get the latest news headlines, optionally filtered by topic.",
+  "parameters": {
+   "topic": {
+    "type": "string",
+    "description": "Optional topic filter e.g. 'technology', 'sports', 'politics', 'business'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "read_aloud",
+  "description": "Read text content aloud using text-to-speech.",
+  "parameters": {
+   "text": {
+    "type": "string",
+    "description": "The text to read aloud.",
+    "required": true
+   },
+   "speed": {
+    "type": "number",
+    "description": "Speech rate multiplier (0.5 = slow, 1.0 = normal, 2.0 = fast).",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "summarize_page",
+  "description": "Summarize the content of the currently open web page or article.",
+  "parameters": {}
+ },
+ {
+  "name": "save_article",
+  "description": "Save the current article for later reading.",
+  "parameters": {
+   "title": {
+    "type": "string",
+    "description": "Optional title to save the article under.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "get_saved_articles",
+  "description": "Retrieve the list of saved articles.",
+  "parameters": {}
+ },
+ {
+  "name": "subscribe_newsletter",
+  "description": "Subscribe to a newsletter by topic.",
+  "parameters": {
+   "topic": {
+    "type": "string",
+    "description": "The newsletter topic to subscribe to.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "open_ebook",
+  "description": "Open an ebook by title.",
+  "parameters": {
+   "title": {
+    "type": "string",
+    "description": "The title of the ebook to open.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "set_reading_goal",
+  "description": "Set a daily reading goal in pages.",
+  "parameters": {
+   "pages_per_day": {
+    "type": "number",
+    "description": "Number of pages to read per day.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_reading_progress",
+  "description": "Get current reading progress toward the daily goal.",
+  "parameters": {}
+ },
+ {
+  "name": "listen_to_article",
+  "description": "Listen to an article using text-to-speech.",
+  "parameters": {
+   "speed": {
+    "type": "number",
+    "description": "Optional playback speed multiplier (0.5 to 2.0).",
+    "required": false
+   }
+  }
+ }
+]

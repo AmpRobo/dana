@@ -1,0 +1,114 @@
+[
+ {
+  "name": "lock_car",
+  "description": "Lock or unlock the car remotely.",
+  "parameters": {
+   "action": {
+    "type": "string",
+    "description": "'lock' or 'unlock'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "start_car",
+  "description": "Remote start or stop the car engine.",
+  "parameters": {
+   "action": {
+    "type": "string",
+    "description": "'start' or 'stop'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "car_climate",
+  "description": "Set the car's climate control remotely.",
+  "parameters": {
+   "temperature": {
+    "type": "number",
+    "description": "Target temperature in degrees.",
+    "required": true
+   },
+   "unit": {
+    "type": "string",
+    "description": "'fahrenheit' or 'celsius'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "find_my_car",
+  "description": "Locate your parked car on a map.",
+  "parameters": {}
+ },
+ {
+  "name": "check_car_status",
+  "description": "Check car status: fuel/battery level, tire pressure, doors.",
+  "parameters": {}
+ },
+ {
+  "name": "honk_horn",
+  "description": "Honk the car horn remotely to locate it.",
+  "parameters": {}
+ },
+ {
+  "name": "flash_lights",
+  "description": "Flash the car lights remotely.",
+  "parameters": {}
+ },
+ {
+  "name": "open_trunk",
+  "description": "Open or close the car trunk remotely.",
+  "parameters": {
+   "action": {
+    "type": "string",
+    "description": "'open' or 'close'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_fuel_level",
+  "description": "Check the current fuel or battery level.",
+  "parameters": {}
+ },
+ {
+  "name": "find_ev_charger",
+  "description": "Find nearby EV charging stations.",
+  "parameters": {
+   "connector_type": {
+    "type": "string",
+    "description": "Optional connector type e.g. 'CCS', 'CHAdeMO', 'Tesla'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "set_charge_limit",
+  "description": "Set the EV charge limit percentage.",
+  "parameters": {
+   "percent": {
+    "type": "number",
+    "description": "Charge limit 50-100%.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_range",
+  "description": "Get the estimated remaining driving range.",
+  "parameters": {}
+ },
+ {
+  "name": "toggle_valet_mode",
+  "description": "Enable or disable valet mode.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   }
+  }
+ }
+]

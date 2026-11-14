@@ -1,0 +1,162 @@
+[
+ {
+  "name": "search_flights",
+  "description": "Search for flights between cities.",
+  "parameters": {
+   "origin": {
+    "type": "string",
+    "description": "Origin city or airport code.",
+    "required": true
+   },
+   "destination": {
+    "type": "string",
+    "description": "Destination city or airport code.",
+    "required": true
+   },
+   "date": {
+    "type": "string",
+    "description": "Travel date in human readable format.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "search_hotels",
+  "description": "Search for hotels in a location.",
+  "parameters": {
+   "location": {
+    "type": "string",
+    "description": "City or area to search.",
+    "required": true
+   },
+   "check_in": {
+    "type": "string",
+    "description": "Check-in date.",
+    "required": true
+   },
+   "check_out": {
+    "type": "string",
+    "description": "Check-out date.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "check_in_flight",
+  "description": "Check in for an upcoming flight.",
+  "parameters": {
+   "confirmation_code": {
+    "type": "string",
+    "description": "Booking confirmation code.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "show_boarding_pass",
+  "description": "Display the boarding pass for an upcoming flight.",
+  "parameters": {
+   "confirmation_code": {
+    "type": "string",
+    "description": "Optional booking confirmation code. Shows next flight if omitted.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "get_flight_status",
+  "description": "Check the status of a flight.",
+  "parameters": {
+   "flight_number": {
+    "type": "string",
+    "description": "Flight number e.g. 'UA123', 'DL456'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "book_rental_car",
+  "description": "Search for rental cars at a location.",
+  "parameters": {
+   "location": {
+    "type": "string",
+    "description": "Pickup location.",
+    "required": true
+   },
+   "pickup_date": {
+    "type": "string",
+    "description": "Pickup date.",
+    "required": true
+   },
+   "return_date": {
+    "type": "string",
+    "description": "Return date.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_trip_itinerary",
+  "description": "Show the itinerary for an upcoming trip.",
+  "parameters": {
+   "trip_name": {
+    "type": "string",
+    "description": "Optional trip name or destination.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "convert_timezone",
+  "description": "Convert a time between timezones.",
+  "parameters": {
+   "time": {
+    "type": "string",
+    "description": "Time to convert e.g. '3pm'.",
+    "required": true
+   },
+   "from_tz": {
+    "type": "string",
+    "description": "Source timezone e.g. 'EST', 'America/New_York'.",
+    "required": true
+   },
+   "to_tz": {
+    "type": "string",
+    "description": "Target timezone.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_exchange_rate",
+  "description": "Get the current exchange rate between currencies.",
+  "parameters": {
+   "from_currency": {
+    "type": "string",
+    "description": "Source currency code.",
+    "required": true
+   },
+   "to_currency": {
+    "type": "string",
+    "description": "Target currency code.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "translate_phrase",
+  "description": "Translate a phrase for travel purposes.",
+  "parameters": {
+   "text": {
+    "type": "string",
+    "description": "Text to translate.",
+    "required": true
+   },
+   "target_language": {
+    "type": "string",
+    "description": "Target language.",
+    "required": true
+   }
+  }
+ }
+]

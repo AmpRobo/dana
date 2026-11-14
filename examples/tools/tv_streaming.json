@@ -1,0 +1,138 @@
+[
+ {
+  "name": "play_show",
+  "description": "Play a TV show or movie by title on a streaming service.",
+  "parameters": {
+   "title": {
+    "type": "string",
+    "description": "Title of the show or movie.",
+    "required": true
+   },
+   "service": {
+    "type": "string",
+    "description": "Streaming service e.g. 'netflix', 'hulu', 'disney+', 'prime'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "switch_tv_input",
+  "description": "Switch the TV input source.",
+  "parameters": {
+   "input": {
+    "type": "string",
+    "description": "Input source e.g. 'HDMI 1', 'HDMI 2', 'USB', 'antenna'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "toggle_subtitles",
+  "description": "Turn subtitles on or off.",
+  "parameters": {
+   "enabled": {
+    "type": "boolean",
+    "description": "True to enable, false to disable.",
+    "required": true
+   },
+   "language": {
+    "type": "string",
+    "description": "Subtitle language e.g. 'english', 'spanish'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "set_tv_volume",
+  "description": "Set the TV volume level.",
+  "parameters": {
+   "level": {
+    "type": "number",
+    "description": "Volume level from 0 to 100.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "tv_power",
+  "description": "Turn the TV on or off.",
+  "parameters": {
+   "action": {
+    "type": "string",
+    "description": "'on' or 'off'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "tv_channel",
+  "description": "Switch to a specific TV channel.",
+  "parameters": {
+   "channel": {
+    "type": "string",
+    "description": "Channel number or name.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "rewind_media",
+  "description": "Rewind the current media by a specified amount.",
+  "parameters": {
+   "seconds": {
+    "type": "number",
+    "description": "Number of seconds to rewind.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "fast_forward_media",
+  "description": "Fast forward the current media by a specified amount.",
+  "parameters": {
+   "seconds": {
+    "type": "number",
+    "description": "Number of seconds to fast forward.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "search_streaming",
+  "description": "Search for content across streaming services.",
+  "parameters": {
+   "query": {
+    "type": "string",
+    "description": "Search query for movies, shows, or actors.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "add_to_watchlist",
+  "description": "Add a show or movie to your watchlist.",
+  "parameters": {
+   "title": {
+    "type": "string",
+    "description": "Title to add.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_continue_watching",
+  "description": "Get a list of shows/movies you haven't finished.",
+  "parameters": {}
+ },
+ {
+  "name": "set_sleep_timer_tv",
+  "description": "Set a sleep timer to auto-turn off the TV.",
+  "parameters": {
+   "minutes": {
+    "type": "number",
+    "description": "Minutes until the TV turns off.",
+    "required": true
+   }
+  }
+ }
+]

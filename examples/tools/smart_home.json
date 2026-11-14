@@ -1,0 +1,189 @@
+[
+ {
+  "name": "set_thermostat",
+  "description": "Set the home thermostat to a target temperature.",
+  "parameters": {
+   "temperature": {
+    "type": "number",
+    "description": "Target temperature in degrees.",
+    "required": true
+   },
+   "unit": {
+    "type": "string",
+    "description": "'fahrenheit' or 'celsius'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "control_lights",
+  "description": "Turn lights on or off in a specific room, optionally setting brightness or color.",
+  "parameters": {
+   "room": {
+    "type": "string",
+    "description": "The room name e.g. 'bedroom', 'kitchen', 'living room'.",
+    "required": true
+   },
+   "action": {
+    "type": "string",
+    "description": "'on', 'off', or 'dim'.",
+    "required": true
+   },
+   "brightness": {
+    "type": "number",
+    "description": "Brightness 0-100 (for 'on' or 'dim').",
+    "required": false
+   },
+   "color": {
+    "type": "string",
+    "description": "Optional light color e.g. 'warm white', 'cool white', 'red', 'blue'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "lock_door",
+  "description": "Lock or unlock a smart door lock.",
+  "parameters": {
+   "door": {
+    "type": "string",
+    "description": "Which door e.g. 'front door', 'back door', 'garage'.",
+    "required": true
+   },
+   "action": {
+    "type": "string",
+    "description": "'lock' or 'unlock'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "start_robot_vacuum",
+  "description": "Start or stop the robot vacuum cleaner.",
+  "parameters": {
+   "action": {
+    "type": "string",
+    "description": "'start', 'stop', or 'dock'.",
+    "required": true
+   },
+   "room": {
+    "type": "string",
+    "description": "Optional specific room to clean.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "control_fan",
+  "description": "Control a smart fan.",
+  "parameters": {
+   "room": {
+    "type": "string",
+    "description": "Room where the fan is.",
+    "required": true
+   },
+   "action": {
+    "type": "string",
+    "description": "'on', 'off'.",
+    "required": true
+   },
+   "speed": {
+    "type": "string",
+    "description": "'low', 'medium', 'high'.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "control_blinds",
+  "description": "Open or close smart blinds/curtains.",
+  "parameters": {
+   "room": {
+    "type": "string",
+    "description": "Room name.",
+    "required": true
+   },
+   "action": {
+    "type": "string",
+    "description": "'open', 'close', or a percentage (0-100).",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "arm_security_system",
+  "description": "Arm or disarm the home security system.",
+  "parameters": {
+   "action": {
+    "type": "string",
+    "description": "'arm_home', 'arm_away', or 'disarm'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_security_camera_feed",
+  "description": "View a security camera feed.",
+  "parameters": {
+   "camera_name": {
+    "type": "string",
+    "description": "Name of the camera e.g. 'front porch', 'backyard', 'driveway'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "control_sprinklers",
+  "description": "Start or stop the garden sprinkler system.",
+  "parameters": {
+   "action": {
+    "type": "string",
+    "description": "'start' or 'stop'.",
+    "required": true
+   },
+   "zone": {
+    "type": "string",
+    "description": "Optional zone name e.g. 'front yard', 'backyard'.",
+    "required": false
+   },
+   "duration_minutes": {
+    "type": "number",
+    "description": "How long to run in minutes.",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "set_light_scene",
+  "description": "Activate a predefined lighting scene.",
+  "parameters": {
+   "scene_name": {
+    "type": "string",
+    "description": "Scene name e.g. 'movie', 'dinner', 'bedtime', 'morning', 'party'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "control_garage_door",
+  "description": "Open or close the garage door.",
+  "parameters": {
+   "action": {
+    "type": "string",
+    "description": "'open' or 'close'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_indoor_temperature",
+  "description": "Get the current indoor temperature reading.",
+  "parameters": {
+   "room": {
+    "type": "string",
+    "description": "Optional room name for a specific sensor.",
+    "required": false
+   }
+  }
+ }
+]

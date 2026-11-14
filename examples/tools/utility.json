@@ -1,0 +1,174 @@
+[
+ {
+  "name": "evaluate_js",
+  "description": "Evaluate a JavaScript expression for calculations, math, date, or string manipulation. Use console.log() to output.",
+  "parameters": {
+   "js": {
+    "type": "string",
+    "description": "The JavaScript code to evaluate.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "web_search",
+  "description": "Search the web for information.",
+  "parameters": {
+   "query": {
+    "type": "string",
+    "description": "The search query.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "take_screenshot",
+  "description": "Take a screenshot of the current screen.",
+  "parameters": {}
+ },
+ {
+  "name": "open_app",
+  "description": "Open an application by name.",
+  "parameters": {
+   "app_name": {
+    "type": "string",
+    "description": "The name of the app to open.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "close_app",
+  "description": "Close a running application.",
+  "parameters": {
+   "app_name": {
+    "type": "string",
+    "description": "The name of the app to close.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "set_wallpaper",
+  "description": "Set the device wallpaper from a URL or built-in option.",
+  "parameters": {
+   "source": {
+    "type": "string",
+    "description": "URL or built-in wallpaper name.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "translate_text",
+  "description": "Translate text from one language to another.",
+  "parameters": {
+   "text": {
+    "type": "string",
+    "description": "The text to translate.",
+    "required": true
+   },
+   "target_language": {
+    "type": "string",
+    "description": "Target language code e.g. 'es', 'fr', 'de', 'ja'.",
+    "required": true
+   },
+   "source_language": {
+    "type": "string",
+    "description": "Source language code (auto-detected if omitted).",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "get_weather",
+  "description": "Get current weather or forecast for a location.",
+  "parameters": {
+   "location": {
+    "type": "string",
+    "description": "City name or location.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_weather_forecast",
+  "description": "Get a multi-day weather forecast.",
+  "parameters": {
+   "location": {
+    "type": "string",
+    "description": "City name or location.",
+    "required": true
+   },
+   "days": {
+    "type": "number",
+    "description": "Number of forecast days (1-7).",
+    "required": false
+   }
+  }
+ },
+ {
+  "name": "set_clipboard",
+  "description": "Copy text to the clipboard.",
+  "parameters": {
+   "text": {
+    "type": "string",
+    "description": "Text to copy.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "get_clipboard",
+  "description": "Get the current clipboard contents.",
+  "parameters": {}
+ },
+ {
+  "name": "define_word",
+  "description": "Look up the definition of a word.",
+  "parameters": {
+   "word": {
+    "type": "string",
+    "description": "The word to define.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "unit_convert",
+  "description": "Convert between units of measurement.",
+  "parameters": {
+   "value": {
+    "type": "number",
+    "description": "The value to convert.",
+    "required": true
+   },
+   "from_unit": {
+    "type": "string",
+    "description": "Source unit e.g. 'miles', 'kg', 'fahrenheit'.",
+    "required": true
+   },
+   "to_unit": {
+    "type": "string",
+    "description": "Target unit e.g. 'km', 'lbs', 'celsius'.",
+    "required": true
+   }
+  }
+ },
+ {
+  "name": "scan_qr_code",
+  "description": "Open the camera to scan a QR code.",
+  "parameters": {}
+ },
+ {
+  "name": "create_qr_code",
+  "description": "Generate a QR code for given text or URL.",
+  "parameters": {
+   "content": {
+    "type": "string",
+    "description": "Text or URL to encode.",
+    "required": true
+   }
+  }
+ }
+]
