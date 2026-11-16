@@ -173,6 +173,30 @@ dana voice --tools examples/tools/smart_home.json
 - **tools 的长度**：Dana 最多读 4096 token（大约 110 个工具），启动时会打印 tools 占多少 token，超出时提醒。
 - **语言**：默认 `--language en`，因为 Dana 只认英文。
 - **速度**：Dana 生成调用在 CPU 上每条 0.4–0.6 秒（`smart_home.json`，约 750 token），`desktop.json`（约 1850 token）0.8–1.3 秒。大部分时间花在读 tools 上，tools 越长越慢，接近 4096 token 时光读 tools 就要 2 秒多。
+- **识别更准**：`dana voice` 会从 tools 里抽出工具名、参数名、描述里引号中的示例值（如 'kitchen'、'living room'）和其他描述词，解码时给它们加分（`--tool-boost`，默认 2.0，`0` 关闭），并用束搜索代替贪心解码（`--beam-size`，默认 4，`1` 回到贪心）。束搜索的解码时间大约是贪心的几倍，嫌慢可以用 `--beam-size 2`。`dana listen` 和 `dana transcribe` 同样默认束搜索（`--beam-size 4`），也可以加 `--tools xxx.json` 给 tools 里的词加分（`--tool-boost`、`--max-tool-keywords` 同上）。
+
+**9. 让 Dana 适应识别错误（新 tools 一条命令微调）**
+
+```bash
+export GEMINI_API_KEY=...                       # 用自己的数据就加 --data my.jsonl，不需要 key
+python scripts/voice_finetune.py examples/tools/smart_home.json
+dana voice --tools examples/tools/smart_home.json --dana-checkpoint checkpoints/dana_smart_home.pkl
+```
+
+没有 Gemini key 时，`desktop.json` 可以用模板生成命令（54 个工具每个约 150 条，另加一成"一句话两件事"，共 8910 条）：
+
+```bash
+python scripts/desktop_commands.py --out data/voice/desktop_commands.jsonl
+python scripts/voice_finetune.py examples/tools/desktop.json --data data/voice/desktop_commands.jsonl --tts kokoro
+```
+
+脚本依次做五步，中间结果在 `data/voice/<名字>/`，中断后重跑会接着做，`--redo 步骤名` 重做某一步：
+
+1. **generate**：用 Gemini 给每个工具写约 150 条口语命令和对应的调用（`--per-tool`），另加约一成"一句话做两三件事"的命令。
+2. **speak**：用本机 TTS 把每条命令念出来（自动找 Kokoro、piper、espeak-ng、espeak、pico2wave；Kokoro 声音最像真人，28 个英文声音随机挑、三成混合两个声音，需要 `pip install kokoro-onnx` 和 `checkpoints/kokoro/` 下的 `kokoro-v1.0.onnx`、`voices-v1.0.bin`），加随机噪声、音量和语速，再用和 `dana voice` 一样的设置（束搜索、tools 词加分）让 Whistle 转写，保留它的错误。没有 TTS 时跳过这一步（`sudo apt install espeak-ng` 即可）。
+3. **build**：每条命令生成干净版、Whistle 听到的版本，再把 Whistle 常犯的错（比如 kitchen → kitten）套到别的命令上多造几份（`--text-copies`），调用都是正确答案。同一条命令的所有版本放在同一个 train/val/test 里，测试集不会被训练到。
+4. **train**：用 `dana finetune` 微调，存成 `checkpoints/dana_<名字>.pkl`。
+5. **eval**：在留出的命令上对比原版和微调后的 Dana，分"干净文本"和"Whistle 听到的文本"两组打分，结果写进 `report.json`。build 这一步还会打印 Whistle 在这些命令上的词错误率和最常见的混淆。
 
 **暂时跑不了的：** `dana eval`、`dana train`、`dana tokenize` 需要 `data/tool_calls_unified/` 下的工具调用数据集，本地还没有。要先用 `dana generate-data` 生成，这一步需要 `GEMINI_API_KEY`。
 

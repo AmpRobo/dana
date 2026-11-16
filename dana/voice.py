@@ -7,9 +7,15 @@ the next utterance, within --wait seconds, the command. Commands and their tool 
 are printed as one JSON line each on stdout, for another program to carry out; what
 was heard goes to stderr.
 
+Words from the tool definitions (tool and parameter names, the values their
+descriptions quote, other description words) are favoured while Whistle decodes, and
+decoding is a beam search, so "kitten lights" comes out as "kitchen lights" more often.
+
 Usage:
     dana voice --tools examples/tools/smart_home.json
     dana voice --tools tools.json --wake ""        # every utterance is a command
+    dana voice --tools tools.json --dana-checkpoint checkpoints/dana_smart_home.pkl   # after scripts/voice_finetune.py
+    dana voice --tools tools.json --tool-boost 0 --beam-size 1   # plain greedy, only --keywords favoured
 """
 
 import json
@@ -33,6 +39,97 @@ def after_wake(text, wake):
         return None
     rest = " ".join(words[len(wanted):]).lstrip(" ,.;:!?-")
     return rest[:1].upper() + rest[1:]
+
+
+# Words too common or too generic to be worth favouring while decoding.
+_STOPWORDS = frozenset("""
+a an the of to in on at for and or is it my me i you your this that with from by as be do not no so up
+out if but all just about can will am are was were been has have had would could should may might its
+our we they them their he she him her his who what when where how which some any each every also than
+then now here there very too more much many most other new old get set make take let use used using via
+true false null none yes given whether optional specific current currently name names number numbers
+value values type types e.g eg i.e ie etc like such one two default string boolean integer float list
+items item id ids format either another into over only per otherwise else
+""".split())
+
+
+def tool_keywords(tools, limit=300):
+    """Words and phrases worth favouring while Whistle decodes commands for `tools`.
+
+    `tools` is the tools JSON (a string or the parsed list). In order of priority:
+    values the descriptions quote or list as enum ("living room", "arm home"), words of
+    tool and parameter names (thermostat, brightness), then other description words of
+    four letters or more. Common words are left out, as Whistle hears them well and
+    favouring them only invites wrong insertions. At most `limit`, without repeats.
+    """
+    if isinstance(tools, str):
+        tools = json.loads(tools)
+    quoted, named, described = [], [], []
+
+    def words(text):
+        return re.findall(r"[A-Za-z][A-Za-z'-]*[A-Za-z]|[A-Za-z]", text)
+
+    for tool in tools:
+        if not isinstance(tool, dict):
+            continue
+        texts = [tool.get("description", "")]
+        named += tool.get("name", "").replace("-", "_").split("_")
+        params = tool.get("parameters") or {}
+        if isinstance(params, dict) and isinstance(params.get("properties"), dict):
+            params = params["properties"]  # JSON-Schema style tools
+        for key, spec in (params.items() if isinstance(params, dict) else []):
+            named += key.replace("-", "_").split("_")
+            if not isinstance(spec, dict):
+                continue
+            texts.append(spec.get("description", ""))
+            quoted += [str(v) for v in spec.get("enum", []) if isinstance(v, str)]
+        for text in texts:
+            quoted += re.findall(r"'([^']{1,40})'", text or "") + re.findall(r'"([^"]{1,40})"', text or "")
+            described += words(text or "")
+
+    found, seen = [], set()
+    for group in (quoted, named, described):
+        for phrase in group:
+            phrase = " ".join(phrase.replace("_", " ").split())
+            if not re.fullmatch(r"[A-Za-z][A-Za-z' -]*", phrase):
+                continue  # "~/code", "ctrl+c", "101.1 FM": not written as spoken
+            # one word: skip common, short and camel/snake identifiers' leftovers
+            if " " not in phrase and (phrase.lower() in _STOPWORDS or len(phrase) < 3):
+                continue
+            if group is described and len(phrase) < 4:
+                continue
+            if group is not quoted:
+                phrase = phrase.lower()
+            if phrase.lower() in seen:
+                continue
+            seen.add(phrase.lower())
+            found.append(phrase)
+            if len(found) >= limit:
+                return found
+    return found
+
+
+def whistle_keywords(args, tools=None):
+    """--keywords (the wake word by default) at --boost, then the tools' words at --tool-boost.
+
+    `tools` defaults to --tools when given (a file or the JSON); with neither, only --keywords.
+    Prints to stderr which tool words are favoured."""
+    from .whistle.transcribe import split_keywords
+
+    mine = split_keywords(args.keywords)
+    keywords = list(mine)
+    if tools is None and getattr(args, "tools", None):
+        tools = read_tools(args.tools)
+    if tools is not None and getattr(args, "tool_boost", 0) > 0:
+        taken = {k.lower() for k in mine}
+        keywords += [(w, args.tool_boost) for w in tool_keywords(tools, args.max_tool_keywords)
+                     if w.lower() not in taken]
+        favoured = [k[0] for k in keywords if not isinstance(k, str)]
+        if favoured:
+            shown = ", ".join(favoured[:12]) + (", ..." if len(favoured) > 12 else "")
+            print(f"Favouring {len(favoured)} words from the tools (boost {args.tool_boost:g}): {shown}",
+                  file=sys.stderr)
+    return keywords
 
 
 def read_tools(value):
@@ -67,6 +164,7 @@ def main(args):
 
     calls("Hello.")  # compile the decoder now rather than on the first command
     transcriber = load_transcriber(args)
+    keywords = whistle_keywords(args, tools)
     names = ", ".join(t["name"] for t in json.loads(tools))
     size = len(tokenizer.encode(normalize_tools(tools)[0]))
     print(f"Tools ({size} tokens): {names}", file=sys.stderr)
@@ -78,7 +176,7 @@ def main(args):
 
     armed = None  # when the wake word was last said on its own
     try:
-        for result, _, spent in heard(args, transcriber):
+        for result, _, spent in heard(args, transcriber, keywords):
             text = result["text"]
             command = after_wake(text, args.wake)
             if command is None and armed is not None and time.time() - armed <= args.wait:

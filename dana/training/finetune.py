@@ -251,11 +251,22 @@ def finetune_local(args):
     max_enc_len = getattr(args, "max_enc_len", None) or DEFAULT_MAX_ENC_LEN
     max_dec_len = getattr(args, "max_dec_len", None) or DEFAULT_MAX_DEC_LEN
 
+    best_path, base_metrics, ft_metrics = None, {}, {}
     _owns_cache = args.cache_dir is None
     cache_dir = args.cache_dir or tempfile.mkdtemp(prefix="dana-finetune-cache-")
     os.makedirs(cache_dir, exist_ok=True)
 
-    train_examples, val_examples, test_examples = _per_tool_split(examples)
+    fields = ("query", "tools", "answers")
+    if all(ex.get("split") in ("train", "val", "test") for ex in examples):
+        # Splits chosen by whoever wrote the file (scripts/voice_finetune.py keeps every
+        # variant of one command in the same split, so test commands are never trained on).
+        train_examples, val_examples, test_examples = (
+            [{k: ex[k] for k in fields} for ex in examples if ex["split"] == name]
+            for name in ("train", "val", "test"))
+        print("Using the train/val/test split given in the file")
+    else:
+        examples = [{k: ex[k] for k in fields} for ex in examples]
+        train_examples, val_examples, test_examples = _per_tool_split(examples)
 
     if len(train_examples) == 0:
         all_avail = val_examples + test_examples
@@ -364,6 +375,7 @@ def finetune_local(args):
         data_mod.CACHE_DIR = original_cache_dir
         if _owns_cache:
             shutil.rmtree(cache_dir, ignore_errors=True)
+    return {"checkpoint": best_path, "base": base_metrics, "finetuned": ft_metrics}
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()

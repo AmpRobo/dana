@@ -118,6 +118,20 @@ _install_xla_log_filter()
 from .dataset.tokenizer import DEFAULT_MAX_ENC_LEN, DEFAULT_MAX_DEC_LEN, DEFAULT_MAX_GEN_LEN
 
 
+def _add_tool_bias_args(p, required=False):
+    """Options shared by `transcribe`, `listen` and `voice`: favouring words from tool definitions."""
+    p.add_argument("--tools", type=str, required=required, default=None,
+                   help="Tools JSON: a file such as examples/tools/smart_home.json, or the JSON itself"
+                        + ("" if required else "; its words are favoured while decoding"))
+    p.add_argument("--tool-boost", type=float, default=2.0,
+                   help="Logit bonus for words taken from --tools (names, quoted values, descriptions); "
+                        "0 turns it off (default: 2.0)")
+    p.add_argument("--max-tool-keywords", type=int, default=300,
+                   help="At most this many words from the tools are favoured (default: 300)")
+    p.add_argument("--beam-size", type=int, default=4,
+                   help="Whistle beam search width; 1 is greedy (default: 4)")
+
+
 def _add_microphone_args(p, language):
     """Options shared by `listen` and `voice`: Whistle weights, the microphone and keyword biasing."""
     p.add_argument("--checkpoint", type=str, default=None,
@@ -250,19 +264,20 @@ def main():
     p.add_argument("--keywords", type=str, default=None,
                    help="Words or phrases to favour, comma separated, spelled as they should appear")
     p.add_argument("--boost", type=float, default=3.0, help="How strongly to favour --keywords (logit bonus)")
+    _add_tool_bias_args(p)
 
     p = sub.add_parser("listen", add_help=False)
     _add_microphone_args(p, language=None)
+    _add_tool_bias_args(p)
 
     p = sub.add_parser("voice", add_help=False)
-    p.add_argument("--tools", type=str, required=True, help="Tools JSON: a file such as examples/tools/smart_home.json, "
-                                                            "or the JSON itself")
     p.add_argument("--dana-checkpoint", type=str, default="checkpoints/dana.pkl")
     p.add_argument("--wake", type=str, default="Dana",
                    help='Wake word a command starts with (default: Dana; "" makes every utterance a command)')
     p.add_argument("--wait", type=float, default=10.0,
                    help="Seconds after a lone wake word in which the next utterance is the command")
     _add_microphone_args(p, language="en")
+    _add_tool_bias_args(p, required=True)
 
     p = sub.add_parser("record", add_help=False)
     p.add_argument("text", type=str, help="Transcript of what you will say, e.g. \"Dana.\"")

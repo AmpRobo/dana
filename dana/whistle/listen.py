@@ -9,6 +9,8 @@ Usage:
     dana listen                          # default microphone, Ctrl+C to stop
     dana listen --language de --silence 1.0
     dana listen --keywords "Dana,Xiaoyu"     # Dana is favoured by default; --keywords "" for none
+    dana listen --tools examples/tools/smart_home.json   # also favour the tools' words
+    dana listen --beam-size 1                # greedy: faster, a little less accurate (default: beam 4)
     arecord -f S16_LE -r 16000 -c 1 -t raw | dana listen --stdin
 """
 
@@ -114,13 +116,16 @@ def load_transcriber(args):
     transcriber = Transcriber(checkpoint, dtype=args.dtype)
     if args.language is not None and args.language not in transcriber.cfg.languages:
         raise SystemExit(f"--language must be one of {', '.join(transcriber.cfg.languages)}")
-    transcriber.warmup()
+    transcriber.warmup(getattr(args, "beam_size", 4))
     return transcriber
 
 
-def heard(args, transcriber):
-    """Yield (result, audio seconds, transcribe seconds) for each utterance with text in it."""
-    keywords = split_keywords(args.keywords)
+def heard(args, transcriber, keywords=None):
+    """Yield (result, audio seconds, transcribe seconds) for each utterance with text in it.
+
+    `keywords` defaults to --keywords; items may be (word, bonus) pairs."""
+    keywords = split_keywords(args.keywords) if keywords is None else keywords
+    beam_size = getattr(args, "beam_size", 4)
     recorder = None if args.stdin else _arecord(args.device)
     blocks = _in_background(blocks_from(sys.stdin.buffer if args.stdin else recorder.stdout))
     try:
@@ -128,11 +133,14 @@ def heard(args, transcriber):
         if threshold is None:
             print(f"Measuring room noise for {args.calibrate:g} s, stay quiet...", file=sys.stderr, flush=True)
             threshold = calibrate(blocks, args.calibrate)
-        favour = f", keywords {', '.join(keywords)}" if keywords else ""
+        plain = [k for k in keywords if isinstance(k, str)]
+        favour = f", keywords {', '.join(plain)}" if plain else ""
+        favour += f", beam {beam_size}" if beam_size > 1 else ""
         print(f"Listening (threshold {threshold:.4f}{favour}). Speak; Ctrl+C to stop.", file=sys.stderr, flush=True)
         for clip in utterances(blocks, threshold, silence=args.silence):
             start = time.time()
-            result = transcriber.transcribe(clip, language=args.language, keywords=keywords, boost=args.boost)
+            result = transcriber.transcribe(clip, language=args.language, keywords=keywords, boost=args.boost,
+                                            beam_size=beam_size)
             if result["text"]:
                 yield result, len(clip) / SAMPLE_RATE, time.time() - start
     finally:
@@ -141,9 +149,12 @@ def heard(args, transcriber):
 
 
 def main(args):
+    from ..voice import whistle_keywords
+
     transcriber = load_transcriber(args)
+    keywords = whistle_keywords(args)
     try:
-        for result, seconds, spent in heard(args, transcriber):
+        for result, seconds, spent in heard(args, transcriber, keywords):
             print(f"[{result['language']}] {result['text']}", flush=True)
             print(f"    ({seconds:.1f} s audio, {spent:.1f} s to transcribe)", file=sys.stderr, flush=True)
     except KeyboardInterrupt:

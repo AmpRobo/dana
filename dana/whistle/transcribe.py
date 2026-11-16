@@ -1,9 +1,11 @@
-"""Whistle speech-to-text: WAV reading, 30-second chunking and greedy decoding in JAX.
+"""Whistle speech-to-text: WAV reading, 30-second chunking and greedy or beam-search decoding in JAX.
 
 Usage:
     dana transcribe clip.wav
     dana transcribe clip.wav --language de --checkpoint checkpoints/whistle.safetensors
     dana transcribe clip.wav --keywords "Speech Dispatcher,Xiaoyu"
+    dana transcribe clip.wav --tools examples/tools/smart_home.json   # favour the tools' words
+    dana transcribe clip.wav --beam-size 1                            # greedy (default: beam 4)
 """
 
 import json
@@ -102,25 +104,47 @@ class KeywordBias:
     `word_start[t]` says whether token t is one of those "▁" pieces.
     """
 
-    def __init__(self, starts, paths, word_start, eos, boost=DEFAULT_BOOST):
-        self.paths = [(tuple(p), True) for p in starts if p] + [(tuple(p), False) for p in paths if p]
+    def __init__(self, starts, paths, word_start, eos, boost=DEFAULT_BOOST, start_boosts=None, path_boosts=None):
+        """`start_boosts` / `path_boosts`, when given, are one bonus per entry of `starts` /
+        `paths`, so some keywords (say, words taken from tool definitions) can be favoured
+        less than others; otherwise every keyword gets `boost`."""
+        start_boosts = start_boosts or [boost] * len(starts)
+        path_boosts = path_boosts or [boost] * len(paths)
+        self.paths = ([(tuple(p), True, b) for p, b in zip(starts, start_boosts) if p]
+                      + [(tuple(p), False, b) for p, b in zip(paths, path_boosts) if p])
         self.word_start, self.eos, self.boost = word_start, eos, boost
 
-    def _open(self, text):
+    def _open(self, text, with_boost=False):
         """(path, m) for each keyword whose first m tokens end `text`, with m < len(path)."""
-        for path, at_start in self.paths:
+        for path, at_start, boost in self.paths:
             for m in range(min(len(path) - 1, len(text)) + 1):
                 if (len(text) == m) == at_start and tuple(text[len(text) - m:]) == path[:m]:
-                    yield path, m
+                    yield (path, m, boost) if with_boost else (path, m)
+
+    def bonuses(self, logits, text):
+        """{token: bonus} for the next token after `text`; `logits` is the next-token row.
+
+        A keyword's first token only gets its bonus where the model's own first choice
+        starts a new word; a keyword already under way always gets it."""
+        plain = int(logits.argmax())
+        new_word = plain != self.eos and (not text or bool(self.word_start[plain]))
+        found = {}
+        for path, m, boost in self._open(text, with_boost=True):
+            if m or new_word:
+                found[path[m]] = max(found.get(path[m], 0.0), boost)
+        return found
+
+    def completes(self, text):
+        """Whether `text` ends with a whole keyword (at the very start for start paths)."""
+        n = len(text)
+        return any(len(path) <= n and tuple(text[n - len(path):]) == path and (n == len(path)) == at_start
+                   for path, at_start, _ in self.paths)
 
     def pick(self, logits, text):
         """Greedy choice after the keyword bonus; `logits` is the next-token row."""
-        plain = int(logits.argmax())
-        new_word = plain != self.eos and (not text or bool(self.word_start[plain]))
         boosted = logits.copy()
-        for path, m in self._open(text):
-            if m or new_word:
-                boosted[path[m]] = logits[path[m]] + self.boost
+        for token, bonus in self.bonuses(logits, text).items():
+            boosted[token] = logits[token] + bonus
         return int(boosted.argmax())
 
     def abandoned(self, text, pick):
@@ -154,6 +178,7 @@ class Transcriber:
         from .model import Whistle
 
         self.cfg = cfg
+        self._jnp = jnp
         self.params = jax.tree.map(jnp.asarray, params)
         self.tokenizer = WhistleTokenizer(self.cfg)
         model = Whistle(self.cfg)
@@ -162,7 +187,7 @@ class Transcriber:
         self._logits = jax.jit(lambda p, tokens, enc, frames: model.apply({"params": p}, tokens, enc, frames,
                                                                            method=Whistle.logits))
 
-    def warmup(self):
+    def warmup(self, beam_size=1):
         """Compile the encoder and the first decoder bucket so the first real call is not slow."""
         c = self.cfg
         enc, frames = self._encode(self.params, np.zeros((1, CHUNK_SECONDS * SAMPLE_RATE), np.float32),
@@ -170,17 +195,25 @@ class Transcriber:
         tokens = np.full((1, DECODE_BUCKET), c.pad, np.int32)
         tokens[0, 0] = c.bos
         self._logits(self.params, tokens, enc, frames).block_until_ready()
+        if beam_size > 1:
+            jnp = self._jnp
+            tokens = np.repeat(tokens, beam_size, axis=0)
+            self._logits(self.params, tokens, jnp.repeat(enc, beam_size, axis=0),
+                         jnp.repeat(frames, beam_size, axis=0)).block_until_ready()
 
-    def _decode_chunk(self, samples, language, bias=None):
-        """Greedy decode of one chunk of at most CHUNK_SECONDS. Returns (text, language).
+    def _decode_chunk(self, samples, language, bias=None, beam_size=1):
+        """Decode one chunk of at most CHUNK_SECONDS. Returns (text, language).
 
-        With a KeywordBias, a keyword the bonus started but the model then leaves unfinished
-        is taken back: decoding resumes from the first boosted token of it, unboosted there.
+        Greedy with beam_size 1. With a KeywordBias, a keyword the bonus started but the
+        model then leaves unfinished is taken back: decoding resumes from the first boosted
+        token of it, unboosted there.
         """
         c = self.cfg
         wav = np.zeros((1, CHUNK_SECONDS * SAMPLE_RATE), np.float32)
         wav[0, :len(samples)] = samples
         enc, frames = self._encode(self.params, wav, np.array([len(samples)], np.int32))
+        if beam_size > 1:
+            return self._beam_search(enc, frames, language, bias, beam_size)
 
         tokens = np.full((1, c.max_tokens), c.pad, np.int32)
         tokens[0, 0] = c.bos
@@ -217,34 +250,141 @@ class Transcriber:
         language = c.languages[tokens[0, 1] - c.text]
         return self.tokenizer.decode(tokens[0, 2:].tolist()), language
 
-    def transcribe(self, audio, language=None, keywords=None, boost=DEFAULT_BOOST):
+    def _language_tag(self, enc, frames, language):
+        """The language tag token: the one given, or the model's first choice at position 0."""
+        c = self.cfg
+        if language is not None:
+            return c.tag(language)
+        tokens = np.full((1, DECODE_BUCKET), c.pad, np.int32)
+        tokens[0, 0] = c.bos
+        logits = np.array(self._logits(self.params, tokens, enc, frames)[0, 0])
+        logits[np.arange(c.vocab) < c.text] = -np.inf
+        return int(logits.argmax())
+
+    def _beam_search(self, enc, frames, language, bias, beam_size):
+        """Beam search over `beam_size` hypotheses, decoded together as one batch.
+
+        Each step every live hypothesis proposes its best next tokens; the `beam_size` best
+        continuations by total log-probability (plus keyword bonuses) survive, and ones that
+        end go to `finished`. The search stops once no live hypothesis scores above the best
+        finished one (scores only fall), and the finished one with the best log-probability
+        per token wins, so short ones are not favoured.
+
+        Keyword bonuses count only for keywords a hypothesis completes: while it is part way
+        through one, the bonuses it collected are owed, and paid back (subtracted) if it
+        turns away before the end, the beam version of greedy decoding's take-back.
+        """
+        c, jnp, k = self.cfg, self._jnp, beam_size
+        tag = self._language_tag(enc, frames, language)
+        enc_k, frames_k = jnp.repeat(enc, k, axis=0), jnp.repeat(frames, k, axis=0)
+        is_tag = np.arange(c.vocab) >= c.text
+        beams = [([], 0.0, 0.0)]  # (text tokens after the tag, score, bonus owed)
+        finished = []  # (score, text tokens)
+        pos = 1  # index of the last filled position: 0 is BOS, 1 the language tag
+        while beams and pos < c.max_tokens - 1:
+            size = min(c.max_tokens, (pos // DECODE_BUCKET + 1) * DECODE_BUCKET)
+            batch = np.full((k, size), c.pad, np.int32)
+            batch[:, 0], batch[:, 1] = c.bos, tag
+            for i in range(k):  # rows past the live beams repeat beam 0, keeping the batch shape fixed
+                batch[i, 2:pos + 1] = beams[i if i < len(beams) else 0][0]
+            logits = np.array(self._logits(self.params, batch, enc_k, frames_k)[:, pos])
+            logits[:, is_tag] = -np.inf
+            peak = logits.max(axis=1, keepdims=True)
+            logp = logits - peak - np.log(np.exp(logits - peak).sum(axis=1, keepdims=True))
+
+            candidates = []
+            for i, (text, score, _) in enumerate(beams):
+                row = logp[i].copy()
+                bonus = bias.bonuses(logits[i], text) if bias is not None else {}
+                for token, extra in bonus.items():
+                    row[token] += extra
+                for token in np.argpartition(-row, k)[:k + 1]:
+                    candidates.append((score + float(row[token]), i, int(token), bonus.get(int(token), 0.0)))
+            candidates.sort(key=lambda x: -x[0])
+
+            survivors = []
+            for total, i, token, extra in candidates:
+                text, _, owed = beams[i]
+                if token == c.eos:
+                    finished.append((total - owed, text))
+                    continue
+                text = text + [token]
+                if bias is not None:
+                    if bias.completes(text):
+                        owed = 0.0
+                    elif any(m for _, m in bias._open(text)):
+                        owed += extra
+                    else:
+                        total, owed = total - owed, 0.0
+                survivors.append((text, total, owed))
+                if len(survivors) == k:
+                    break
+            beams = survivors
+            pos += 1
+            # Scores only fall as tokens are added, so once no live beam is ahead of the best
+            # finished one, none can overtake it.
+            if finished and (not beams or max(b[1] for b in beams) < max(f[0] for f in finished)):
+                break
+        if not finished:
+            finished = [(score - owed, text) for text, score, owed in beams]
+        _, best = max(finished, key=lambda f: f[0] / (len(f[1]) + 1))
+        return self.tokenizer.decode(best), c.languages[tag - c.text]
+
+    def keyword_bias(self, keywords, boost=DEFAULT_BOOST):
+        """A KeywordBias for `keywords`: words or phrases, or (word, bonus) pairs to give
+        some their own bonus; the rest get `boost`. None when there are no keywords.
+
+        At the start of a transcript a lowercase keyword is also favoured capitalised, as
+        Whistle writes a first word ("Kitchen lights off.")."""
+        if not keywords:
+            return None
+        cached = getattr(self, "_bias_cache", None)
+        key = (tuple(k if isinstance(k, str) else tuple(k) for k in keywords), boost)
+        if cached is not None and cached[0] == key:
+            return cached[1]
+        encode = self.tokenizer.encode
+        starts, start_boosts, paths, path_boosts = [], [], [], []
+        for item in keywords:
+            word, bonus = (item, boost) if isinstance(item, str) else (item[0], float(item[1]))
+            for variant in dict.fromkeys([word, word[:1].upper() + word[1:]]):
+                starts.append(encode(variant))
+                start_boosts.append(bonus)
+            paths.append(encode(" " + word))
+            path_boosts.append(bonus)
+        bias = KeywordBias(starts, paths, self.tokenizer.word_start, self.cfg.eos, boost,
+                           start_boosts=start_boosts, path_boosts=path_boosts)
+        self._bias_cache = (key, bias)
+        return bias
+
+    def transcribe(self, audio, language=None, keywords=None, boost=DEFAULT_BOOST, beam_size=1):
         """Speech to text. `audio` is a WAV path or 16 kHz mono float samples.
 
         `language` is one of the checkpoint's languages, or None to detect it from the
         first 30 seconds. `keywords` are words or phrases to favour, written as they
-        should appear; `boost` is how strongly. Returns {"text", "language"}.
+        should appear (or (word, bonus) pairs); `boost` is how strongly. `beam_size` above 1
+        uses beam search instead of greedy decoding: usually more accurate, about that many
+        times the decoding work. Returns {"text", "language"}.
         """
         if language is not None and language not in self.cfg.languages:
             raise ValueError(f"language must be one of {', '.join(self.cfg.languages)}")
-        bias = None
-        if keywords:
-            encode = self.tokenizer.encode
-            bias = KeywordBias([encode(k) for k in keywords], [encode(" " + k) for k in keywords],
-                               self.tokenizer.word_start, self.cfg.eos, boost)
+        bias = self.keyword_bias(keywords, boost)
         samples = read_wav(audio) if isinstance(audio, (str, os.PathLike)) else np.asarray(audio, np.float32)
         step = CHUNK_SECONDS * SAMPLE_RATE
         texts = []
         for begin in range(0, max(len(samples), 1), step):
-            text, language = self._decode_chunk(samples[begin:begin + step], language, bias)
+            text, language = self._decode_chunk(samples[begin:begin + step], language, bias, beam_size)
             texts.append(text.strip())
         return {"text": " ".join(t for t in texts if t), "language": language}
 
 
 def main(args):
+    from ..voice import whistle_keywords
+
     transcriber = Transcriber(args.checkpoint, dtype=args.dtype)
-    keywords = split_keywords(args.keywords)
+    keywords = whistle_keywords(args)
     for path in args.audio:
-        result = transcriber.transcribe(path, language=args.language, keywords=keywords, boost=args.boost)
+        result = transcriber.transcribe(path, language=args.language, keywords=keywords, boost=args.boost,
+                                        beam_size=args.beam_size)
         if args.json:
             print(json.dumps({"audio": path, **result}, ensure_ascii=False))
         else:

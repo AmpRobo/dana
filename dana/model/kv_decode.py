@@ -79,8 +79,8 @@ def _build(config, max_len):
             q = _rope(_norm(_heads(h @ a["q_proj"]["kernel"], heads, dim), a["q_norm"]["scale"], dt), c, s)
             k = _rope(_norm(_heads(h @ a["k_proj"]["kernel"], kv_heads, dim), a["k_norm"]["scale"], dt), c, s)
             v = _heads(h @ a["v_proj"]["kernel"], kv_heads, dim)
-            cache_k = jax.lax.dynamic_update_slice(cache_k, k[None], (i, 0, 0, pos, 0))
-            cache_v = jax.lax.dynamic_update_slice(cache_v, v[None], (i, 0, 0, pos, 0))
+            cache_k = jax.lax.dynamic_update_slice(cache_k, k[None].astype(cache_k.dtype), (i, 0, 0, pos, 0))
+            cache_v = jax.lax.dynamic_update_slice(cache_v, v[None].astype(cache_v.dtype), (i, 0, 0, pos, 0))
             out = _attend(q, jnp.repeat(cache_k[i], repeats, axis=1), jnp.repeat(cache_v[i], repeats, axis=1),
                           seen, dt, a["out_proj"]["kernel"])
             x = x + jax.nn.sigmoid(p["self_attn_gate"]).astype(dt) * out
