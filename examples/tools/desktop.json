@@ -488,5 +488,10 @@
     "required": true
    }
   }
+ },
+ {
+  "name": "introduce_yourself",
+  "description": "Introduce yourself: \"Hi! I'm Dana, your intelligent AI assistant, built right into this vehicle. I'm here to make every journey smarter and safer. From monitoring vehicle status to managing vehicle systems, navigation, and controls, I'm always ready to help.\"",
+  "parameters": {}
  }
 ]

@@ -626,14 +626,40 @@ def g_clipboard(rng):
     return finish(rng, t), {"text": text}
 
 
+
+INTRO_ASK = ["Who are you", "What's your name", "What can you do", "What are you", "Who am I talking to",
+             "Are you Dana", "What do you do", "What's your job", "How can you help me", "What can you help me with",
+             "What can you do in this car", "Are you the car's assistant", "Are you the assistant in this car",
+             "What kind of assistant are you", "Who is this", "What should I call you",
+             "Do you have a name", "What are you able to do", "What can I ask you", "Who's speaking"]
+INTRO_TELL = ["Introduce yourself", "Tell me about yourself", "Tell me who you are", "Tell me what you can do",
+              "Say hello and introduce yourself", "Tell me your name", "Give me a quick introduction",
+              "Explain what you can do", "Introduce yourself to my passenger", "Say hi to my friend",
+              "Let me know what you can help with", "Tell us a bit about yourself"]
+INTRO_START = ["", "", "", "Hey, ", "Hi, ", "Hello, ", "Dana, ", "Hey Dana, ", "Hi Dana, ", "So, ", "Okay, ",
+               "Excuse me, ", "Hello there, "]
+
+
+def g_intro(rng):
+    """Questions keep a question mark; requests may take the usual polite start."""
+    if rng.random() < 0.6:
+        start, ask = rng.choice(INTRO_START), rng.choice(INTRO_ASK)
+        t = start + ask[:1].lower() + ask[1:] if start else ask
+        return t + rng.choice(["?", "?", "?", "."]), {}
+    t = rng.choice(INTRO_TELL)
+    if rng.random() < 0.3:
+        t = rng.choice(["Hey Dana, ", "Dana, ", "Hi, ", "Hey, "]) + t[:1].lower() + t[1:]
+        return t + rng.choice([".", ".", "", " please."]), {}
+    return finish(rng, t), {}
+
 PEOPLE = ["mom", "dad", "John", "Sarah", "my boss", "Alex", "Grandma", "Mike", "the dentist", "Emma", "Kenji"]
 TIMES = ["5 minutes", "ten minutes", "an hour", "7 am", "noon", "tomorrow morning", "3 pm", "half an hour", "tonight"]
 NONE_TEMPLATES = [
     "Remind me to {task} {when}", "Set a reminder to {task}", "Set an alarm for {time}",
     "Set a timer for {time}", "Wake me up at {time}", "Call {person}", "Text {person} that I'm running late",
     "Send a message to {person}", "Email {person} the report", "What time is it", "What's the date today",
-    "What day is it", "How are you", "Tell me a joke", "What's your name", "Thank you", "Thanks, that's all",
-    "Never mind", "Cancel that", "Forget it", "Good morning", "Good night", "Who are you",
+    "What day is it", "How are you", "Tell me a joke", "Thank you", "Thanks, that's all",
+    "Never mind", "Cancel that", "Forget it", "Good morning", "Good night",
     "What's {a} times {b}", "What's {a} plus {b}", "How do you spell {word}", "Translate {word} into Spanish",
     "Order a pizza", "Book a table for {n} at {time}", "Add {item} to my shopping list", "Order more {item}",
     "Play some music by {artist}", "Play {artist} on Spotify", "Navigate to the airport", "How far is {city}",
@@ -674,6 +700,7 @@ def g_none(rng):
 
 
 GENERATORS = {
+    "introduce_yourself": g_intro,
     "minimize_window": simple("Minimize this window", "Minimize the window", "Minimize", "Hide this window",
                               "Shrink this window down", "Send this window to the taskbar", "Minimize it",
                               "Minimize the current window", "Get this window out of the way"),
