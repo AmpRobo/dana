@@ -20,6 +20,7 @@ dependencies = [
 [project.optional-dependencies]
 tpu = ["jax[tpu]"]
 gpu = ["jax[cuda12]"]
+voice = ["kokoro-onnx>=0.6", "soundfile"]
 
 [project.scripts]
 dana = "dana.cli:main"

@@ -46,6 +46,28 @@ python -m pip install -e .
 echo Installing native Windows JAX (CPU mode)...
 python -m pip install -U jax jaxlib
 
+:: Kokoro TTS, used by scripts\voice_finetune.py to read voice commands aloud. Installs the
+:: kokoro-onnx package and downloads the full-precision model (~325 MB) and voices (~28 MB) into
+:: checkpoints\kokoro\ unless they are already there. set DANA_KOKORO=0 skips this.
+set KOKORO_DIR=checkpoints\kokoro
+set KOKORO_URL=https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0
+if not "%DANA_KOKORO%"=="0" (
+    echo Installing Kokoro TTS...
+    python -m pip install -e ".[voice]"
+    if not exist "%KOKORO_DIR%" mkdir "%KOKORO_DIR%"
+    for %%F in (kokoro-v1.0.onnx voices-v1.0.bin) do (
+        if exist "%KOKORO_DIR%\%%F" (
+            echo   %KOKORO_DIR%\%%F already exists.
+        ) else (
+            echo   Downloading %%F...
+            curl.exe -fL -o "%KOKORO_DIR%\%%F.part" "%KOKORO_URL%/%%F" && move /y "%KOKORO_DIR%\%%F.part" "%KOKORO_DIR%\%%F" >nul || (
+                if exist "%KOKORO_DIR%\%%F.part" del "%KOKORO_DIR%\%%F.part"
+                echo   Warning: could not download %%F; get it from %KOKORO_URL%/%%F
+            )
+        )
+    )
+)
+
 :: Sanity check
 python -c "import jax; print('JAX devices:', jax.devices())" || echo Warning: jax import failed; check the install above.
 

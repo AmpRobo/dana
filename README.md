@@ -193,7 +193,7 @@ python scripts/voice_finetune.py examples/tools/desktop.json --data data/voice/d
 脚本依次做五步，中间结果在 `data/voice/<名字>/`，中断后重跑会接着做，`--redo 步骤名` 重做某一步：
 
 1. **generate**：用 Gemini 给每个工具写约 150 条口语命令和对应的调用（`--per-tool`），另加约一成"一句话做两三件事"的命令。
-2. **speak**：用本机 TTS 把每条命令念出来（自动找 Kokoro、piper、espeak-ng、espeak、pico2wave；Kokoro 声音最像真人，28 个英文声音随机挑、三成混合两个声音，需要 `pip install kokoro-onnx` 和 `checkpoints/kokoro/` 下的 `kokoro-v1.0.onnx`、`voices-v1.0.bin`），加随机噪声、音量和语速，再用和 `dana voice` 一样的设置（束搜索、tools 词加分）让 Whistle 转写，保留它的错误。没有 TTS 时跳过这一步（`sudo apt install espeak-ng` 即可）。
+2. **speak**：用本机 TTS 把每条命令念出来（自动找 Kokoro、piper、espeak-ng、espeak、pico2wave；Kokoro 声音最像真人，28 个英文声音随机挑、三成混合两个声音，`setup` / `setup.bat` 会装好 `kokoro-onnx` 并把全精度的 `kokoro-v1.0.onnx`、`voices-v1.0.bin` 下载到 `checkpoints/kokoro/`，约 350 MB，已有就跳过；不需要时用 `DANA_KOKORO=0 source ./setup` 跳过），加随机噪声、音量和语速，再用和 `dana voice` 一样的设置（束搜索、tools 词加分）让 Whistle 转写，保留它的错误。没有 TTS 时跳过这一步（`sudo apt install espeak-ng` 即可）。
 3. **build**：每条命令生成干净版、Whistle 听到的版本，再把 Whistle 常犯的错（比如 kitchen → kitten）套到别的命令上多造几份（`--text-copies`），调用都是正确答案。同一条命令的所有版本放在同一个 train/val/test 里，测试集不会被训练到。
 4. **train**：用 `dana finetune` 微调，存成 `checkpoints/dana_<名字>.pkl`。
 5. **eval**：在留出的命令上对比原版和微调后的 Dana，分"干净文本"和"Whistle 听到的文本"两组打分，结果写进 `report.json`。build 这一步还会打印 Whistle 在这些命令上的词错误率和最常见的混淆。
@@ -218,7 +218,9 @@ cd dana
 .\setup.bat
 ```
 
-> **Note:** `setup.bat` creates a `.venv`, installs all dependencies (including JAX in CPU mode), and prompts for an optional W&B API key.
+> **Note:** `setup.bat` creates a `.venv`, installs all dependencies (including JAX in CPU mode and the Kokoro TTS used for voice finetuning), and prompts for an optional W&B API key.
+>
+> Both `setup` and `setup.bat` download the Kokoro model (~350 MB) into `checkpoints/kokoro/` unless it is already there. Set `DANA_KOKORO=0` to skip it.
 
 After setup completes, activate the virtual environment in every new terminal session before running dana commands:
 
