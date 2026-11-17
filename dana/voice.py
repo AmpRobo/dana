@@ -16,6 +16,11 @@ Usage:
     dana voice --tools tools.json --wake ""        # every utterance is a command
     dana voice --tools tools.json --dana-checkpoint checkpoints/dana_smart_home.pkl   # after scripts/voice_finetune.py
     dana voice --tools tools.json --tool-boost 0 --beam-size 1   # plain greedy, only --keywords favoured
+    dana voice --tools examples/tools/desktop.json --speak       # Kokoro says each call's reply
+
+With --speak, Kokoro reads out what each called tool says to say (a "say" field, else the
+text its description quotes, else the description; see dana/speak.py). The microphone is
+muted while it speaks, so Dana does not hear itself, wake word included.
 """
 
 import json
@@ -148,9 +153,11 @@ def main(args):
     from .dataset.dataset import DEFAULT_RUN_ENC_LEN, get_tokenizer
     from .model.architecture import SimpleAttentionNetwork
     from .model.run import generate, load_checkpoint, normalize_tools
-    from .whistle.listen import heard, load_transcriber
+    from .speak import Speaker, reply_for, strip_say
+    from .whistle.listen import Gate, heard, load_transcriber
 
-    tools = read_tools(args.tools)
+    defined = read_tools(args.tools)
+    tools = strip_say(defined)  # "say" is for --speak, not for Dana to read
     print(f"Loading Dana ({args.dana_checkpoint})...", file=sys.stderr, flush=True)
     params, config = load_checkpoint(args.dana_checkpoint)
     model, tokenizer = SimpleAttentionNetwork(config), get_tokenizer()
@@ -163,6 +170,11 @@ def main(args):
             return raw  # not valid JSON: pass Dana's text on as it is
 
     calls("Hello.")  # compile the decoder now rather than on the first command
+    speaker, gate = None, Gate(args.mute_tail)
+    if args.speak:
+        print(f"Loading Kokoro ({args.speak_voice})...", file=sys.stderr, flush=True)
+        speaker = Speaker.from_args(args)
+        speaker.warmup()
     transcriber = load_transcriber(args)
     keywords = whistle_keywords(args, tools)
     names = ", ".join(t["name"] for t in json.loads(tools))
@@ -176,7 +188,7 @@ def main(args):
 
     armed = None  # when the wake word was last said on its own
     try:
-        for result, _, spent in heard(args, transcriber, keywords):
+        for result, _, spent in heard(args, transcriber, keywords, gate):
             text = result["text"]
             command = after_wake(text, args.wake)
             if command is None and armed is not None and time.time() - armed <= args.wait:
@@ -194,5 +206,10 @@ def main(args):
             print(f"  command {command}  ({spent:.1f} s to hear, {time.time() - start:.1f} s to call)",
                   file=sys.stderr, flush=True)
             print(json.dumps({"command": command, "calls": found}, ensure_ascii=False), flush=True)
+            reply = reply_for(found, json.loads(defined)) if speaker else ""
+            if reply:
+                print(f"  saying  {reply}", file=sys.stderr, flush=True)
+                with gate.closed():  # the microphone hears nothing until the reply has played
+                    speaker.say(reply)
     except KeyboardInterrupt:
         pass

@@ -276,6 +276,19 @@ def main():
                    help='Wake word a command starts with (default: Dana; "" makes every utterance a command)')
     p.add_argument("--wait", type=float, default=10.0,
                    help="Seconds after a lone wake word in which the next utterance is the command")
+    p.add_argument("--speak", action="store_true",
+                   help="Say each call's reply with Kokoro (the tool's \"say\" field, else the text its "
+                        "description quotes, else the description); the microphone is muted meanwhile")
+    p.add_argument("--speak-voice", type=str, default="af_heart", help="Kokoro voice (default: af_heart)")
+    p.add_argument("--speak-speed", type=float, default=1.0, help="Kokoro speaking speed (default: 1.0)")
+    p.add_argument("--speak-lang", type=str, default=None,
+                   help="Kokoro language, e.g. en-us (default: en-gb for b* voices, else en-us)")
+    p.add_argument("--speak-device", type=str, default=None,
+                   help="aplay playback device, e.g. hw:0,0 (default: system)")
+    p.add_argument("--mute-tail", type=float, default=0.5,
+                   help="Seconds the microphone stays muted after a reply, for echo (default: 0.5)")
+    p.add_argument("--kokoro-model", type=str, default=os.path.join("checkpoints", "kokoro", "kokoro-v1.0.onnx"))
+    p.add_argument("--kokoro-voices", type=str, default=os.path.join("checkpoints", "kokoro", "voices-v1.0.bin"))
     _add_microphone_args(p, language="en")
     _add_tool_bias_args(p, required=True)
 

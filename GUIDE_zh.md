@@ -233,6 +233,17 @@ dana voice --tools examples/tools/smart_home.json
   - 还没有用真人说的语音命令测过。
 - **控制桌面**：`--tools examples/tools/desktop.json` 有 54 个桌面操作（窗口、应用、音量、媒体、亮度、夜间模式、锁屏和关机、通知、Wi-Fi 和蓝牙、文件夹和文件、网页、打字、快捷键、剪贴板等）。1846 token，超过训练长度，靠上面第 2 节的 YaRN 读完。文字命令实测 51 条里 46 条选对工具，每条约 1 秒（`smart_home.json` 约 0.5 秒）。启动时会打印 tools 的 token 数，超过 4096 时提醒后面的工具被截掉。
 - **为什么要唤醒词**：Dana 对任何输入都会给出一个调用，比如 “Front left.” 会变成 `control_blinds(room="front porch", action="close")`。没有唤醒词时，随口说的话也会触发调用。
+- **语音回复（`--speak`）**：`dana/speak.py` 用 Kokoro（`./setup` 装好的 `checkpoints/kokoro/`）把每个调用的回复念出来，通过 `aplay` 播放：
+
+  ```bash
+  dana voice --tools examples/tools/desktop.json --dana-checkpoint checkpoints/<desktop 微调后的>.pkl --speak
+  ```
+
+  - 念什么：工具定义里有 `"say"` 字段就念它，`{参数名}` 用调用的参数填进去（布尔值念成 on/off），比如 `"say": "Turning the {room} lights {state}."`；`"say": ""` 表示这个工具不出声。没有 `say` 时念 description 里双引号括起来的文字（`introduce_yourself` 的自我介绍就是这样），再没有就把整段 description 当确认语念。`say` 字段在交给 Dana 之前会被去掉，所以加了它 Dana 读到的输入不变。Dana 没给出调用（`[]`）或输出不是 JSON 时不出声。
+  - 播放期间暂停收音：念的时候麦克风录到的音频全部丢掉，播完后再多丢 `--mute-tail`（默认 0.5 秒），留给回声和 arecord 缓冲里的音频。不然自我介绍里的 “I'm Dana” 会被当成唤醒词。实现是 `dana/whistle/listen.py` 的 `Gate`，`heard()` 多了一个 `gate` 参数。
+  - 一句一句合成，第一句合成好就开始播，不用等整段。实测自我介绍（约 15 秒语音）在 CPU 上合成总共不到 2 秒。
+  - 其他参数：`--speak-voice`（默认 `af_heart`，`b` 开头的是英式口音）、`--speak-speed`、`--speak-lang`、`--speak-device`（aplay 的 `-D`）、`--kokoro-model`、`--kokoro-voices`。
+  - 原版 `checkpoints/dana.pkl` 不认识 `introduce_yourself`，要用加了这个工具以后微调的 checkpoint。
 
 ## 5. 环境变量
 
@@ -255,7 +266,7 @@ dana voice --tools examples/tools/smart_home.json
 - **`dana pretrain` 新增 `--data`**，可以读本地 parquet：行数从文件里数，只读需要的三列。
 - **TPU 检测更严格**。上游只看 `/dev/accel0` 是否存在，Intel 或 AMD 的 NPU 也会被误当成 TPU，导致装 `jax[tpu]`、训练时调用 `jax.distributed.initialize()` 后报错。现在要求 PCI 厂商是 Google。
 - **修复 `dana tpu setup/sync` 打包目录的 bug**：上游只打包了 `dana/` 这个包目录，漏掉了 `setup` 和 `pyproject.toml`。
-- **新增 `dana/whistle/` 和 `dana transcribe`**：从 cactus 移植的 Whistle 语音识别，独立于 Dana 和 Needle 3 的代码，见 4.6。之后又加了 `dana listen`（麦克风实时识别）、`--keywords`（关键词偏置），以及 `dana record` + `dana finetune-whistle`（录音、LoRA 微调认新词），还有 `dana voice`（语音 → Whistle → Dana → tool 调用，见 4.7）。
+- **新增 `dana/whistle/` 和 `dana transcribe`**：从 cactus 移植的 Whistle 语音识别，独立于 Dana 和 Needle 3 的代码，见 4.6。之后又加了 `dana listen`（麦克风实时识别）、`--keywords`（关键词偏置），以及 `dana record` + `dana finetune-whistle`（录音、LoRA 微调认新词），还有 `dana voice`（语音 → Whistle → Dana → tool 调用，见 4.7），以及 `dana voice --speak`（用 Kokoro 念出调用的回复，念的时候暂停收音）。
 - **Dana 推理的输入上限从 1024 提到 4096**：超过训练长度时 RoPE 用 YaRN 缩放，见第 2 节；训练仍然是 1024。**Dana 解码加了 KV cache**（`dana/model/kv_decode.py`），desktop 命令从 5–6.5 秒降到 1 秒左右，结果不变，见第 2 节。`examples/tools/desktop.json` 从 13 个工具扩充到 54 个。
 - **项目整体从 needle 重命名为 dana**：包名、命令（`dana ...`）、环境变量（`DANA_*`）、文件名（`checkpoints/dana.pkl`、`dana/tokenizer/dana.*`）都改了。上游 GitHub 链接和论文引用保持原样。
 

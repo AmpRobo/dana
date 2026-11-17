@@ -15,6 +15,7 @@ Usage:
 """
 
 import collections
+import contextlib
 import itertools
 import os
 import queue
@@ -48,13 +49,44 @@ def blocks_from(stream):
         yield np.frombuffer(data[: len(data) - len(data) % 2], "<i2").astype(np.float32) / 32768.0
 
 
-def _in_background(blocks):
-    """Keep reading `blocks` on a thread so audio is not dropped while a transcription runs."""
+class Gate:
+    """Mutes the microphone while something is played, e.g. `dana voice --speak` replying.
+
+    Blocks read while the gate is closed, and for `tail` seconds after it opens again (echo,
+    and audio still in arecord's buffer), are dropped, so Whistle never hears the reply."""
+
+    def __init__(self, tail=0.5):
+        self.tail = tail
+        self._closed = 0
+        self._open_at = 0.0
+        self._lock = threading.Lock()
+
+    def passes(self):
+        with self._lock:
+            return not self._closed and time.monotonic() >= self._open_at
+
+    @contextlib.contextmanager
+    def closed(self):
+        with self._lock:
+            self._closed += 1
+        try:
+            yield
+        finally:
+            with self._lock:
+                self._closed -= 1
+                self._open_at = time.monotonic() + self.tail
+
+
+def _in_background(blocks, gate=None):
+    """Keep reading `blocks` on a thread so audio is not dropped while a transcription runs.
+
+    Blocks read while `gate` is closed are dropped."""
     q = queue.Queue()
 
     def pump():
         for block in blocks:
-            q.put(block)
+            if gate is None or gate.passes():
+                q.put(block)
         q.put(None)
 
     threading.Thread(target=pump, daemon=True).start()
@@ -120,14 +152,15 @@ def load_transcriber(args):
     return transcriber
 
 
-def heard(args, transcriber, keywords=None):
+def heard(args, transcriber, keywords=None, gate=None):
     """Yield (result, audio seconds, transcribe seconds) for each utterance with text in it.
 
-    `keywords` defaults to --keywords; items may be (word, bonus) pairs."""
+    `keywords` defaults to --keywords; items may be (word, bonus) pairs. Audio that arrives
+    while `gate` (a Gate) is closed is not heard."""
     keywords = split_keywords(args.keywords) if keywords is None else keywords
     beam_size = getattr(args, "beam_size", 4)
     recorder = None if args.stdin else _arecord(args.device)
-    blocks = _in_background(blocks_from(sys.stdin.buffer if args.stdin else recorder.stdout))
+    blocks = _in_background(blocks_from(sys.stdin.buffer if args.stdin else recorder.stdout), gate)
     try:
         threshold = args.threshold
         if threshold is None:
