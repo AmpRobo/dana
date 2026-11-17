@@ -209,7 +209,10 @@ def main(args):
             reply = reply_for(found, json.loads(defined)) if speaker else ""
             if reply:
                 print(f"  saying  {reply}", file=sys.stderr, flush=True)
+                start = time.time()
                 with gate.closed():  # the microphone hears nothing until the reply has played
-                    speaker.say(reply)
+                    first, synth = speaker.say(reply)
+                print(f"  said    ({first:.1f} s to the first sound, {synth:.1f} s synthesising, "
+                      f"{time.time() - start:.1f} s with playback; listening again)", file=sys.stderr, flush=True)
     except KeyboardInterrupt:
         pass

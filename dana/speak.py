@@ -19,6 +19,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 
 import numpy as np
 
@@ -103,12 +104,19 @@ class Speaker:
         self._synth("Hello.")
 
     def say(self, text):
-        """Speak `text`, returning once playback has finished."""
+        """Speak `text`, returning once playback has finished.
+
+        Returns (seconds until the first sentence was handed to aplay, seconds spent synthesising)."""
         sentences = [s for s in re.split(r"(?<=[.!?])\s+", text.strip()) if s]
         player, done = None, False
+        start, first, synth = time.perf_counter(), None, 0.0
         try:
             for sentence in sentences:
+                began = time.perf_counter()
                 pcm, rate = self._synth(sentence)
+                synth += time.perf_counter() - began
+                if first is None:
+                    first = time.perf_counter() - start
                 if player is None:
                     cmd = ["aplay", "-q", "-t", "raw", "-f", "S16_LE", "-r", str(rate), "-c", "1"]
                     if self.device:
@@ -130,3 +138,4 @@ class Speaker:
                 else:
                     player.kill()
                     player.wait()
+        return first or 0.0, synth

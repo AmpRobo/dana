@@ -236,14 +236,14 @@ dana voice --tools examples/tools/smart_home.json
 - **语音回复（`--speak`）**：`dana/speak.py` 用 Kokoro（`./setup` 装好的 `checkpoints/kokoro/`）把每个调用的回复念出来，通过 `aplay` 播放：
 
   ```bash
-  dana voice --tools examples/tools/desktop.json --dana-checkpoint checkpoints/<desktop 微调后的>.pkl --speak
+  dana voice --tools examples/tools/desktop.json --dana-checkpoint checkpoints/dana_desktop.pkl --speak
   ```
 
   - 念什么：工具定义里有 `"say"` 字段就念它，`{参数名}` 用调用的参数填进去（布尔值念成 on/off），比如 `"say": "Turning the {room} lights {state}."`；`"say": ""` 表示这个工具不出声。没有 `say` 时念 description 里双引号括起来的文字（`introduce_yourself` 的自我介绍就是这样），再没有就把整段 description 当确认语念。`say` 字段在交给 Dana 之前会被去掉，所以加了它 Dana 读到的输入不变。Dana 没给出调用（`[]`）或输出不是 JSON 时不出声。
   - 播放期间暂停收音：念的时候麦克风录到的音频全部丢掉，播完后再多丢 `--mute-tail`（默认 0.5 秒），留给回声和 arecord 缓冲里的音频。不然自我介绍里的 “I'm Dana” 会被当成唤醒词。实现是 `dana/whistle/listen.py` 的 `Gate`，`heard()` 多了一个 `gate` 参数。
   - 一句一句合成，第一句合成好就开始播，不用等整段。实测自我介绍（约 15 秒语音）在 CPU 上合成总共不到 2 秒。
   - 其他参数：`--speak-voice`（默认 `af_heart`，`b` 开头的是英式口音）、`--speak-speed`、`--speak-lang`、`--speak-device`（aplay 的 `-D`）、`--kokoro-model`、`--kokoro-voices`。
-  - 原版 `checkpoints/dana.pkl` 不认识 `introduce_yourself`，要用加了这个工具以后微调的 checkpoint。
+  - 原版 `checkpoints/dana.pkl` 不认识 `introduce_yourself`，要用加了这个工具以后微调的 checkpoint，即 `checkpoints/dana_desktop.pkl`（v5）。
 
 ## 5. 环境变量
 
